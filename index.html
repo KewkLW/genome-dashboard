@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genome Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e4e4ef;
+    --text-dim: #8888a0;
+    --accent: #6366f1;
+    --accent2: #8b5cf6;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --orange: #f97316;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Upload screen */
+  #upload-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  #upload-screen h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  #upload-screen .tagline {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+  }
+
+  .drop-zone {
+    width: 100%;
+    max-width: 600px;
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(99,102,241,0.05);
+    box-shadow: 0 0 40px rgba(99,102,241,0.1);
+  }
+
+  .drop-zone .icon { font-size: 3rem; margin-bottom: 16px; }
+  .drop-zone .main-text { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+  .drop-zone .sub-text { font-size: 0.85rem; color: var(--text-dim); }
+  .drop-zone input { display: none; }
+
+  .privacy-note {
+    margin-top: 24px;
+    padding: 16px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 600px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .privacy-note strong { color: var(--green); }
+
+  .supported {
+    margin-top: 16px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  /* Loading */
+  #loading-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #loading-status {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+
+  /* Dashboard (hidden until data loaded) */
+  #dashboard { display: none; }
+
+  .hero {
+    position: relative;
+    padding: 60px 40px 40px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.05) 40%, transparent 70%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    letter-spacing: -0.02em;
+  }
+
+  .hero .subtitle {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-top: 8px;
+    position: relative;
+  }
+
+  .hero .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 30px;
+    position: relative;
+    flex-wrap: wrap;
+  }
+
+  .stats-bar .stat { text-align: center; }
+
+  .stats-bar .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stats-bar .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* Karyogram */
+  .karyogram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 20px;
+  }
+
+  .karyogram-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .chromosomes {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 220px;
+    gap: 4px;
+    padding: 0 10px;
+  }
+
+  .chr-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .chr-bar {
+    width: 100%;
+    max-width: 36px;
+    border-radius: 8px 8px 4px 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 10px;
+  }
+
+  .chr-bar:hover {
+    transform: scaleY(1.05);
+    filter: brightness(1.3);
+  }
+
+  .chr-bar .tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 10;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .chr-bar:hover .tooltip { display: block; }
+
+  .chr-label {
+    margin-top: 8px;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Charts */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .chart-card h3 {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+
+  .radar-wrap { max-width: 500px; margin: 0 auto; }
+
+  /* Summary grid */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+
+  .summary-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .summary-item .emoji { font-size: 1.5rem; margin-bottom: 6px; }
+  .summary-item .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .summary-item .value { font-size: 1rem; font-weight: 700; margin-top: 4px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin: 30px 0 20px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease backwards;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99,102,241,0.1);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .card[data-color="green"]::before { background: var(--green); }
+  .card[data-color="yellow"]::before { background: var(--yellow); }
+  .card[data-color="red"]::before { background: var(--red); }
+  .card[data-color="blue"]::before { background: var(--blue); }
+  .card[data-color="purple"]::before { background: var(--accent2); }
+  .card[data-color="cyan"]::before { background: var(--cyan); }
+  .card[data-color="pink"]::before { background: var(--pink); }
+  .card[data-color="orange"]::before { background: var(--orange); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .card-gene {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    background: rgba(99,102,241,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .card-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .genotype-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 8px 0;
+  }
+
+  .allele {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+  }
+
+  .allele-A { color: #22c55e; border-color: rgba(34,197,94,0.3); }
+  .allele-T { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+  .allele-C { color: #3b82f6; border-color: rgba(59,130,246,0.3); }
+  .allele-G { color: #eab308; border-color: rgba(234,179,8,0.3); }
+  .allele-D { color: #8888a0; border-color: rgba(136,136,160,0.3); }
+  .allele-I { color: #ec4899; border-color: rgba(236,72,153,0.3); }
+
+  .slash {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-size: 1.2rem;
+    margin: 0 2px;
+  }
+
+  .result-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  .tag-normal { background: rgba(34,197,94,0.15); color: var(--green); }
+  .tag-carrier { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .tag-risk { background: rgba(239,68,68,0.15); color: var(--red); }
+  .tag-info { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .tag-notable { background: rgba(139,92,246,0.15); color: var(--accent2); }
+
+  .card-detail {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+
+  .rsid {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    opacity: 0.7;
+    margin-top: 6px;
+  }
+
+  /* Pharma table */
+  .pharma-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .pharma-table th {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .pharma-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pharma-table tr:hover { background: rgba(99,102,241,0.05); }
+
+  .metabolizer {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .met-normal { background: rgba(34,197,94,0.15); color: var(--green); }
+  .met-intermediate { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .met-slow { background: rgba(239,68,68,0.15); color: var(--red); }
+  .met-rapid { background: rgba(59,130,246,0.15); color: var(--blue); }
+
+  .disclaimer {
+    margin-top: 60px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .disclaimer strong { color: var(--yellow); }
+
+  .new-file-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.8rem;
+    z-index: 100;
+    transition: all 0.2s;
+  }
+
+  .new-file-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 2rem; }
+    .grid { grid-template-columns: 1fr; }
+    .chart-row { grid-template-columns: 1fr; }
+    .chromosomes { height: 140px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    #upload-screen h1 { font-size: 2rem; }
+    .drop-zone { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen">
+  <h1>GENOME DASHBOARD</h1>
+  <div class="tagline">Drop your 23andMe raw data file. Everything runs locally in your browser.</div>
+
+  <div class="drop-zone" id="dropZone">
+    <div class="icon">&#x1F9EC;</div>
+    <div class="main-text">Drop your genome file here</div>
+    <div class="sub-text">or click to browse</div>
+    <input type="file" id="fileInput" accept=".txt,.csv,.zip">
+  </div>
+
+  <div class="privacy-note">
+    <strong>100% Private.</strong> Your genome data never leaves your browser. All parsing and analysis happens client-side in JavaScript. No data is uploaded to any server. The source code is fully open for inspection.
+  </div>
+
+  <div class="supported">
+    Supported: 23andMe v3/v4/v5 raw data (.txt), AncestryDNA (.txt)
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div id="loading-status">Parsing genome data...</div>
+</div>
+
+<!-- DASHBOARD (populated dynamically) -->
+<div id="dashboard">
+  <button class="new-file-btn" onclick="location.reload()">&#x21BB; Load New File</button>
+
+  <div class="hero">
+    <canvas id="helixCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.2;"></canvas>
+    <h1>GENOME DASHBOARD</h1>
+    <div class="subtitle" id="heroSubtitle"></div>
+    <div class="stats-bar" id="heroStats"></div>
+  </div>
+
+  <div class="container">
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <div class="karyogram">
+      <div class="karyogram-title">Chromosome Coverage Map &mdash; SNP Density</div>
+      <div class="chromosomes" id="karyogram"></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card">
+        <h3>Neurotransmitter Profile</h3>
+        <div class="radar-wrap"><canvas id="neuroRadar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Risk Overview</h3>
+        <canvas id="riskChart"></canvas>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabBar"></div>
+    <div id="tabContents"></div>
+
+    <div class="disclaimer">
+      <strong>Important Disclaimer:</strong> This dashboard is for educational and informational purposes only. It is NOT medical advice. Genotyping chips test only a subset of known variants; absence of a detected variant does not guarantee absence of risk. Many traits and conditions are polygenic and heavily influenced by environment, lifestyle, and epigenetics. Always consult a certified genetic counselor or physician for clinical interpretation. Raw genotype data can contain errors (estimated 0.1-0.5% genotyping error rate).
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SNP DATABASE — all known variants and their interpretations
+// ============================================================
+const SNP_DB = [
+  // ---- IDENTITY & TRAITS ----
+  {
+    id: 'rs12913832', gene: 'HERC2/OCA2', title: 'Eye Color', category: 'identity', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Brown Eyes', tagClass: 'tag-info', detail: 'GG at HERC2 strongly predicts brown eyes. The G allele is dominant; two copies of A would predict blue. All blue-eyed people trace back to a single ancestor ~6,000-10,000 years ago.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Green/Hazel Likely', tagClass: 'tag-info', detail: 'AG: one copy of each. Likely green, hazel, or light brown eyes.' };
+      if (g === 'AA') return { tag: 'Blue Eyes', tagClass: 'tag-info', detail: 'AA at HERC2 strongly predicts blue eyes. This is the derived European variant.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F441}', label: 'Eye Color', value: g === 'GG' ? 'Brown' : g === 'AA' ? 'Blue' : 'Green/Hazel' })
+  },
+  {
+    id: 'rs1426654', gene: 'SLC24A5', title: 'Skin Pigmentation', category: 'identity', color: 'purple',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'European Variant', tagClass: 'tag-info', detail: 'AA is the derived allele found at near fixation in European populations, associated with lighter skin. This single SNP explains ~25-38% of skin color variation between Europeans and Africans.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Heterozygous', tagClass: 'tag-info', detail: 'AG: intermediate pigmentation. One copy of each allele.' };
+      if (g === 'GG') return { tag: 'Ancestral', tagClass: 'tag-info', detail: 'GG is the ancestral allele, associated with darker pigmentation.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F9AC}', label: 'Skin', value: g === 'AA' ? 'European Pigmentation' : g === 'GG' ? 'Ancestral Pigmentation' : 'Intermediate' })
+  },
+  {
+    id: 'rs8176719', gene: 'ABO', title: 'Blood Type', category: 'identity', color: 'green',
+    multi: ['rs8176719', 'rs8176746'],
+    interpret: (g, all) => {
+      const r719 = all['rs8176719'] || '--';
+      const r746 = all['rs8176746'] || '--';
+      let type = '?';
+      if (r719 === 'DD' || r719 === '--') type = 'O';
+      else if (r746 === 'GG' || r746 === 'CC') type = 'A';
+      else if (r746 === 'TT') type = 'B';
+      else if (r746 === 'CT' || r746 === 'TC') type = 'AB or A/B carrier';
+      if (r719 === 'DI' || r719 === 'ID') type = 'A or B (carrier of O)';
+      return { tag: `Type ${type}`, tagClass: 'tag-info', detail: `rs8176719: ${r719}, rs8176746: ${r746}. The D allele at rs8176719 represents the 261delG frameshift that inactivates the ABO glycosyltransferase (O allele). The rs8176746 distinguishes A from B.`, genotype: r719 };
+    },
+    summary: (g, all) => {
+      const r719 = all['rs8176719'] || '--';
+      let t = '?';
+      if (r719 === 'DD' || r719 === '--') t = 'O';
+      return { emoji: '\u{1F9EC}', label: 'Blood Type', value: `Type ${t}` };
+    }
+  },
+  {
+    id: 'rs17822931', gene: 'ABCC11', title: 'Earwax Type', category: 'identity', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Wet Earwax', tagClass: 'tag-info', detail: 'CC = wet, sticky earwax (ancestral, common in Europeans/Africans). Also associated with more body odor. The T allele (dry earwax) is common in East Asians.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Wet Earwax', tagClass: 'tag-info', detail: 'CT = wet earwax (C is dominant). One copy of the dry-earwax allele but it is recessive.' };
+      if (g === 'TT') return { tag: 'Dry Earwax', tagClass: 'tag-info', detail: 'TT = dry, flaky earwax. Nearly universal in East Asians. Also means reduced body odor and apocrine sweat.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F4A7}', label: 'Earwax', value: g === 'TT' ? 'Dry Type' : 'Wet Type' })
+  },
+  {
+    id: 'rs72921001', gene: 'OR6A2', title: 'Cilantro / Soap Taste', category: 'identity', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal \u2014 No Soap Taste', tagClass: 'tag-normal', detail: 'CC = cilantro tastes normal (as an herb). The T allele is associated with the "soapy" perception via the OR6A2 olfactory receptor.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Might Taste Soapy', tagClass: 'tag-carrier', detail: 'CT = one copy of the soap-taste allele. You may or may not perceive cilantro as soapy; penetrance varies.' };
+      if (g === 'TT') return { tag: 'Likely Tastes Soapy', tagClass: 'tag-risk', detail: 'TT = both copies of the variant. You very likely perceive cilantro as tasting like soap.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F33F}', label: 'Cilantro', value: g === 'CC' ? 'Tastes Normal' : g === 'TT' ? 'Tastes Soapy' : 'May Taste Soapy' })
+  },
+  {
+    id: 'rs713598', gene: 'TAS2R38', title: 'Bitter Taste Perception', category: 'identity', color: 'yellow',
+    multi: ['rs713598', 'rs1726866', 'rs10246939'],
+    interpret: (g, all) => {
+      const snps = ['rs713598', 'rs1726866', 'rs10246939'].map(s => all[s] || '??');
+      const hetCount = snps.filter(s => s.length === 2 && s[0] !== s[1]).length;
+      const tasterAlleles = [(all['rs713598']||'').includes('C'), (all['rs1726866']||'').includes('A'), (all['rs10246939']||'').includes('T')];
+      const nonTasterAlleles = [(all['rs713598']||'').includes('G'), (all['rs1726866']||'').includes('G'), (all['rs10246939']||'').includes('C')];
+      const allTaster = tasterAlleles.every(Boolean) && !nonTasterAlleles.some(Boolean);
+      const allNon = nonTasterAlleles.every(Boolean) && !tasterAlleles.some(Boolean);
+      if (allTaster) return { tag: 'Supertaster', tagClass: 'tag-notable', detail: `PAV/PAV haplotype. You strongly taste PTC/PROP bitterness. Supertasters often dislike bitter vegetables and black coffee. (${snps.join(', ')})`, genotype: snps.join(' ') };
+      if (allNon) return { tag: 'Non-Taster', tagClass: 'tag-info', detail: `AVI/AVI haplotype. You cannot taste PTC/PROP. (~30% of people). (${snps.join(', ')})`, genotype: snps.join(' ') };
+      return { tag: 'Medium Taster', tagClass: 'tag-notable', detail: `Heterozygous (PAV/AVI): you can taste PTC/PROP but not as intensely as a supertaster. (${snps.join(', ')})`, genotype: snps.join(' ') };
+    },
+    summary: (g, all) => {
+      const snps = ['rs713598', 'rs1726866', 'rs10246939'].map(s => all[s] || '??');
+      const nonTasterAlleles = [(all['rs713598']||'').includes('G') && !(all['rs713598']||'').includes('C'), (all['rs1726866']||'').includes('G') && !(all['rs1726866']||'').includes('A'), (all['rs10246939']||'').includes('C') && !(all['rs10246939']||'').includes('T')];
+      const allNon = nonTasterAlleles.every(Boolean);
+      return { emoji: '\u{1F445}', label: 'Bitter Taste', value: allNon ? 'Non-Taster' : 'Taster' };
+    }
+  },
+  {
+    id: 'rs12203592', gene: 'IRF4', title: 'Freckling Tendency', category: 'identity', color: 'cyan',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Lower Freckling', tagClass: 'tag-normal', detail: 'CC = reference. Lower tendency for freckling.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Increased Freckling', tagClass: 'tag-notable', detail: 'CT: one T allele increases freckling tendency, sun sensitivity, and may modestly affect hair color.' };
+      if (g === 'TT') return { tag: 'High Freckling', tagClass: 'tag-notable', detail: 'TT: two copies. Strong tendency for freckling and sun sensitivity.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{2600}', label: 'Freckling', value: (g === 'CT' || g === 'TC' || g === 'TT') ? 'Increased Tendency' : 'Lower Tendency' })
+  },
+  {
+    id: 'rs3827760', gene: 'EDAR', title: 'Hair Thickness', category: 'identity', color: 'blue',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Typical (European/African)', tagClass: 'tag-info', detail: 'AA = reference. Typical hair thickness. The G allele (nearly fixed in East Asians) produces thicker, straighter hair, shovel-shaped incisors, and more sweat glands.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate Thickness', tagClass: 'tag-info', detail: 'AG = one copy of the thick-hair allele. Intermediate hair thickness.' };
+      if (g === 'GG') return { tag: 'Thick, Straight Hair', tagClass: 'tag-info', detail: 'GG = homozygous 370Ala. Thicker, straighter hair. Also associated with shovel-shaped incisors and increased sweat gland density.' };
+      return null;
+    }
+  },
+
+  // ---- BRAIN & NEURO ----
+  {
+    id: 'rs4680', gene: 'COMT', title: 'COMT \u2014 Warrior / Worrier', category: 'neuro', color: 'purple',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Val/Val \u2014 Warrior', tagClass: 'tag-notable', detail: 'GG (Val/Val): high COMT activity, fast dopamine clearance. More resilient under acute stress but potentially lower working memory in calm conditions. The "Warrior" genotype.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Val/Met \u2014 Balanced', tagClass: 'tag-notable', detail: 'AG (Val/Met): balanced. Benefits of both \u2014 good working memory under low stress, reasonable resilience under high stress. Heterozygotes often perform well across wide-ranging conditions.' };
+      if (g === 'AA') return { tag: 'Met/Met \u2014 Worrier', tagClass: 'tag-notable', detail: 'AA (Met/Met): low COMT activity, higher prefrontal dopamine. Better working memory and attention to detail in calm settings, but more stress-sensitive. The "Worrier" genotype.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F9E0}', label: 'COMT', value: g === 'GG' ? 'Warrior (Val/Val)' : g === 'AA' ? 'Worrier (Met/Met)' : 'Balanced (Val/Met)' })
+  },
+  {
+    id: 'rs6265', gene: 'BDNF', title: 'BDNF \u2014 Brain Plasticity', category: 'neuro', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Val/Val \u2014 Normal Secretion', tagClass: 'tag-normal', detail: 'CC (Val/Val): normal BDNF activity-dependent secretion. Supports neuronal survival, learning, and memory. Optimal genotype.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Val/Met \u2014 Reduced', tagClass: 'tag-carrier', detail: 'CT (Val/Met): reduced BDNF secretion. Associated with slightly reduced hippocampal volume and episodic memory performance. Exercise strongly upregulates BDNF.' };
+      if (g === 'TT') return { tag: 'Met/Met \u2014 Low', tagClass: 'tag-risk', detail: 'TT (Met/Met): most reduced BDNF trafficking. Associated with increased anxiety, reduced memory. ~4% of Europeans. Exercise is especially important for you.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs53576', gene: 'OXTR', title: 'Oxytocin Receptor', category: 'neuro', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Higher Social Sensitivity', tagClass: 'tag-info', detail: 'GG: associated with higher empathy, social sensitivity, optimism, and more sensitive parenting behavior in studies.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate', tagClass: 'tag-notable', detail: 'AG: intermediate social sensitivity. Socially attuned but not overly reactive to social cues.' };
+      if (g === 'AA') return { tag: 'Lower Social Sensitivity', tagClass: 'tag-info', detail: 'AA: associated with lower empathy scores in some studies. However, effect sizes are modest and many AA individuals are highly empathetic.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1800497', gene: 'DRD2/ANKK1', title: 'DRD2 \u2014 Dopamine Receptor D2', category: 'neuro', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Receptor Density', tagClass: 'tag-normal', detail: 'GG (A2/A2): normal D2 receptor density in the striatum. No Taq1A risk allele.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Reduced D2 Density', tagClass: 'tag-carrier', detail: 'AG (A1/A2): ~20-30% fewer D2 receptors. Associated with reward-seeking, addiction vulnerability, and novelty seeking.' };
+      if (g === 'AA') return { tag: 'Lowest D2 Density', tagClass: 'tag-risk', detail: 'AA (A1/A1): most reduced D2 density. Strongest association with addictive behaviors and reward sensitivity.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1799971', gene: 'OPRM1', title: 'Opioid Receptor', category: 'neuro', color: 'green',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Normal Sensitivity', tagClass: 'tag-normal', detail: 'AA (Asn/Asn): normal mu-opioid receptor function. Standard pain medication response expected.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Altered Sensitivity', tagClass: 'tag-carrier', detail: 'AG (Asn/Asp): altered pain sensitivity, increased alcohol reward, may affect response to naltrexone.' };
+      if (g === 'GG') return { tag: 'Most Altered', tagClass: 'tag-notable', detail: 'GG (Asp/Asp): most altered opioid binding. May need different pain management approach.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1611115', gene: 'DBH', title: 'Norepinephrine (DBH)', category: 'neuro', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Higher DBH Activity', tagClass: 'tag-normal', detail: 'CC: high-activity promoter variant. Efficient dopamine to norepinephrine conversion. Better stress response, lower novelty-seeking.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate', tagClass: 'tag-notable', detail: 'CT: intermediate DBH activity.' };
+      if (g === 'TT') return { tag: 'Lower DBH Activity', tagClass: 'tag-carrier', detail: 'TT: reduced DBH activity. Higher novelty-seeking, potentially more creative but also more stress-reactive.' };
+      return null;
+    }
+  },
+
+  // ---- HEALTH & RISK ----
+  {
+    id: 'rs429358', gene: 'APOE', title: 'APOE \u2014 Alzheimer\'s Risk', category: 'health', color: 'green',
+    multi: ['rs429358', 'rs7412'],
+    interpret: (g, all) => {
+      const r358 = all['rs429358'] || '??';
+      const r7412 = all['rs7412'] || '??';
+      let apoe = '?';
+      if (r358 === 'TT' && r7412 === 'TT') apoe = '\u03B53/\u03B53';
+      else if (r358 === 'TT' && r7412 === 'CT') apoe = '\u03B52/\u03B53';
+      else if (r358 === 'TT' && r7412 === 'CC') apoe = '\u03B53/\u03B53';
+      else if (r358 === 'CT' && r7412 === 'CT') apoe = '\u03B52/\u03B54';
+      else if (r358 === 'CT' && r7412 === 'TT') apoe = '\u03B53/\u03B54';
+      else if (r358 === 'CC' && r7412 === 'TT') apoe = '\u03B54/\u03B54';
+      else if (r358 === 'CC' && r7412 === 'CC') apoe = '\u03B54/\u03B54';
+      const risk = apoe.includes('\u03B54') ? (apoe === '\u03B54/\u03B54' ? 'high' : 'elevated') : (apoe.includes('\u03B52') ? 'below-average' : 'average');
+      const tagClass = risk === 'high' ? 'tag-risk' : risk === 'elevated' ? 'tag-carrier' : 'tag-normal';
+      return { tag: `${apoe} \u2014 ${risk.charAt(0).toUpperCase() + risk.slice(1)} Risk`, tagClass, detail: `APOE ${apoe}. rs429358: ${r358}, rs7412: ${r7412}. \u03B53/\u03B53 is most common (~60%). \u03B54 increases risk 3-15x. \u03B52 is protective.`, genotype: `${r358} / ${r7412}` };
+    }
+  },
+  {
+    id: 'rs6025', gene: 'F5', title: 'Factor V Leiden', category: 'health', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal \u2014 No Mutation', tagClass: 'tag-normal', detail: 'CC: no Factor V Leiden mutation. Normal clotting factor V function. No elevated VTE risk from this variant.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Heterozygous Carrier', tagClass: 'tag-carrier', detail: 'CT: heterozygous Factor V Leiden. ~5-7x increased risk of venous thromboembolism. Be cautious with oral contraceptives, long flights, and surgery.' };
+      if (g === 'TT') return { tag: 'Homozygous \u2014 High Risk', tagClass: 'tag-risk', detail: 'TT: homozygous Factor V Leiden. ~80x increased clotting risk. Discuss with hematologist.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs7903146', gene: 'TCF7L2', title: 'Type 2 Diabetes Risk', category: 'health', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Lower Risk', tagClass: 'tag-normal', detail: 'CC: no risk alleles at the strongest common T2D locus. Baseline risk.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'CT: one T risk allele. ~1.4x increased T2D risk vs CC. The T allele impairs beta-cell function. Lifestyle (exercise, diet) is your primary lever.' };
+      if (g === 'TT') return { tag: 'Two Risk Alleles', tagClass: 'tag-risk', detail: 'TT: two copies of the strongest common T2D risk allele. ~2x increased risk. Proactive lifestyle management strongly recommended.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs9939609', gene: 'FTO', title: 'FTO \u2014 Obesity Risk', category: 'health', color: 'green',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Low Genetic Obesity Risk', tagClass: 'tag-normal', detail: 'TT: no FTO risk alleles. Favorable genotype associated with lower BMI and reduced appetite signaling.' };
+      if (g === 'AT' || g === 'TA') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'AT: one copy of the FTO risk allele. ~1.3x increased obesity risk. Each A allele adds ~1.5 kg on average.' };
+      if (g === 'AA') return { tag: 'Two Risk Alleles', tagClass: 'tag-risk', detail: 'AA: two copies of FTO risk allele. ~1.7x increased obesity risk. Exercise is especially effective at counteracting FTO.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1801133', gene: 'MTHFR', title: 'MTHFR \u2014 Methylation', category: 'health', color: 'yellow',
+    multi: ['rs1801133', 'rs1801131'],
+    interpret: (g, all) => {
+      const c677t = all['rs1801133'] || '??';
+      const a1298c = all['rs1801131'] || '??';
+      const has677 = c677t.includes('A');
+      const has1298 = a1298c !== 'TT' && a1298c !== '??';
+      let tag, tagClass, detail;
+      if (c677t === 'AA') { tag = 'TT Homozygous \u2014 30% Activity'; tagClass = 'tag-risk'; detail = `Homozygous C677T (rs1801133: ${c677t}). MTHFR enzyme at ~30% activity. Elevated homocysteine likely. Methylfolate supplementation strongly recommended over folic acid.`; }
+      else if (has677 && has1298) { tag = 'Compound Heterozygous'; tagClass = 'tag-carrier'; detail = `C677T heterozygous (${c677t}) + A1298C (${a1298c}). Combined reduction in methylation capacity. Consider methylfolate and B12 supplementation. Homocysteine testing recommended.`; }
+      else if (has677) { tag = 'C677T Heterozygous \u2014 65% Activity'; tagClass = 'tag-carrier'; detail = `One copy C677T (${c677t}). MTHFR at ~65% activity. Mildly reduced but usually clinically manageable with adequate folate.`; }
+      else if (c677t === 'GG') { tag = 'Normal', tagClass = 'tag-normal'; detail = `GG at C677T: normal MTHFR enzyme activity. rs1801131: ${a1298c}.`; }
+      else { tag = '??'; tagClass = 'tag-info'; detail = `rs1801133: ${c677t}, rs1801131: ${a1298c}`; }
+      return { tag, tagClass, detail, genotype: `${c677t} / ${a1298c}` };
+    }
+  },
+  {
+    id: 'rs2187668', gene: 'HLA-DQ2.5', title: 'Celiac Disease Risk', category: 'health', color: 'green',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Low Celiac Risk', tagClass: 'tag-normal', detail: 'No HLA-DQ2.5 haplotype detected. ~95% of celiac patients carry DQ2.5, so its absence substantially reduces genetic risk.' };
+      if (g === 'AG' || g === 'GA' || g === 'AC' || g === 'CA') return { tag: 'One DQ2.5 Copy', tagClass: 'tag-carrier', detail: 'One copy of DQ2.5 haplotype. Moderate celiac risk. ~30% of the general population carries this but only ~3% develop celiac.' };
+      if (g === 'AA') return { tag: 'Two DQ2.5 Copies', tagClass: 'tag-risk', detail: 'Homozygous DQ2.5. Highest genetic risk for celiac disease. Does not mean you will develop it, but risk is elevated.' };
+      return null;
+    }
+  },
+
+  // ---- NUTRITION & METABOLISM ----
+  {
+    id: 'rs4988235', gene: 'MCM6/LCT', title: 'Lactose Tolerance', category: 'nutrition', color: 'green',
+    interpret: g => {
+      if (g === 'AA' || g === 'TT') return { tag: 'Fully Lactose Persistent', tagClass: 'tag-normal', detail: 'Homozygous for lactase persistence. You maintain lactase production into adulthood. Dairy is not a problem genetically. Selected for ~7,500 years ago alongside dairy farming.' };
+      if (g === 'AG' || g === 'GA' || g === 'CT' || g === 'TC') return { tag: 'Lactose Persistent', tagClass: 'tag-normal', detail: 'Heterozygous: one persistence allele is sufficient. You can digest dairy.' };
+      if (g === 'GG' || g === 'CC') return { tag: 'Lactose Intolerant', tagClass: 'tag-carrier', detail: 'No persistence allele. Lactase production likely declines in adulthood. Consider lactase supplements with dairy.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F9C0}', label: 'Lactose', value: (g === 'GG' || g === 'CC') ? 'Intolerant' : 'Tolerant' })
+  },
+  {
+    id: 'rs762551', gene: 'CYP1A2', title: 'Caffeine Metabolism', category: 'nutrition', color: 'yellow',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Fast Metabolizer', tagClass: 'tag-normal', detail: 'AA: fast caffeine metabolism (*1F/*1F). Caffeine is cleared quickly. Lower risk from heavy coffee intake.' };
+      if (g === 'AC' || g === 'CA') return { tag: 'Slow Metabolizer', tagClass: 'tag-carrier', detail: 'AC: slow caffeine metabolism. Caffeine lingers longer with higher plasma levels. Studies show >3 cups/day may increase cardiovascular risk. Avoid caffeine after ~2pm for sleep quality.' };
+      if (g === 'CC') return { tag: 'Slow Metabolizer', tagClass: 'tag-carrier', detail: 'CC: slow caffeine metabolism. Only AA homozygotes are fast metabolizers.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{2615}', label: 'Caffeine', value: g === 'AA' ? 'Fast Metabolizer' : 'Slow Metabolizer' })
+  },
+  {
+    id: 'rs671', gene: 'ALDH2', title: 'Alcohol Flush', category: 'nutrition', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal \u2014 No Flush', tagClass: 'tag-normal', detail: 'GG: full ALDH2 activity. Normal acetaldehyde clearance. No alcohol flush reaction.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Flush Reaction', tagClass: 'tag-risk', detail: 'AG: severely reduced ALDH2 (*2 heterozygote). Flushing, nausea, rapid heartbeat after drinking. 6-10x increased esophageal cancer risk if drinking heavily.' };
+      if (g === 'AA') return { tag: 'Extreme Intolerance', tagClass: 'tag-risk', detail: 'AA: virtually no ALDH2 activity. Extreme alcohol intolerance. Very high esophageal cancer risk from any drinking.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F377}', label: 'Alcohol Flush', value: g === 'GG' ? 'No Flush' : 'Flush Reaction' })
+  },
+
+  // ---- ATHLETIC ----
+  {
+    id: 'rs1815739', gene: 'ACTN3', title: 'ACTN3 \u2014 Sprint Gene', category: 'athletic', color: 'purple',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'R/R \u2014 Power Type', tagClass: 'tag-notable', detail: 'CC (RR): full alpha-actinin-3 expression in fast-twitch fibers. Overrepresented in elite sprinters/power athletes. Every Olympic sprint finalist ever studied had at least one C allele.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'R/X \u2014 Mixed', tagClass: 'tag-notable', detail: 'CT (RX): mixed fiber type. Capacity for both power and endurance. Common in multi-sport athletes. The versatile genotype.' };
+      if (g === 'TT') return { tag: 'X/X \u2014 Endurance', tagClass: 'tag-notable', detail: 'TT (XX): no alpha-actinin-3. Associated with endurance performance. ~1 billion people worldwide are XX. The most common functional gene "knockout" in healthy humans.' };
+      return null;
+    },
+    summary: g => ({ emoji: '\u{1F3CB}', label: 'Muscle Type', value: g === 'CC' ? 'Power' : g === 'TT' ? 'Endurance' : 'Mixed Power/Endurance' })
+  },
+
+  // ---- PHARMACOGENOMICS ----
+  {
+    id: 'rs4149056', gene: 'SLCO1B1', title: 'Statin Response', category: 'pharma', color: 'yellow',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Normal Transporter', tagClass: 'tag-normal', detail: 'TT: normal hepatic statin uptake. Standard statin dosing.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate \u2014 Caution', tagClass: 'tag-carrier', detail: 'CT: ~4.5x increased risk of simvastatin myopathy. Consider lower doses or rosuvastatin/pravastatin (less affected). Flag with prescribing physician.' };
+      if (g === 'CC') return { tag: 'High Myopathy Risk', tagClass: 'tag-risk', detail: 'CC: ~16.9x increased statin myopathy risk, especially with simvastatin. Avoid high-dose simvastatin. Use alternative statins.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs9923231', gene: 'VKORC1', title: 'Warfarin Sensitivity', category: 'pharma', color: 'green',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Normal Dose', tagClass: 'tag-normal', detail: 'Reference genotype. Standard warfarin sensitivity, no dose adjustment needed from VKORC1.' };
+      if (g === 'CT' || g === 'TC' || g === 'AG' || g === 'GA') return { tag: 'Intermediate Sensitivity', tagClass: 'tag-carrier', detail: 'Heterozygous: intermediate warfarin sensitivity. May need ~3-4 mg/day instead of standard ~5-7 mg/day.' };
+      if (g === 'TT' || g === 'AA') return { tag: 'High Sensitivity', tagClass: 'tag-risk', detail: 'Homozygous variant: high warfarin sensitivity. Requires low dose (~1-2 mg/day). VKORC1 explains ~25% of warfarin dose variability.' };
+      return null;
+    }
+  },
+
+  // ---- SLEEP ----
+  {
+    id: 'rs1801260', gene: 'CLOCK', title: 'Chronotype', category: 'sleep', color: 'green',
+    interpret: g => {
+      if (g === 'AA' || g === 'TT') return { tag: 'Typical Chronotype', tagClass: 'tag-normal', detail: 'Reference genotype. No strong genetic push toward night owl behavior.' };
+      if (g === 'AG' || g === 'GA' || g === 'TC' || g === 'CT') return { tag: 'Slight Evening Preference', tagClass: 'tag-info', detail: 'One copy of the evening-preference allele. Slight tendency toward being a night owl.' };
+      if (g === 'GG' || g === 'CC') return { tag: 'Night Owl', tagClass: 'tag-notable', detail: 'Homozygous evening chronotype. Associated with delayed sleep phase, higher nocturnal caloric intake.' };
+      return null;
+    }
+  },
+
+  // ---- INFLAMMATION ----
+  {
+    id: 'rs1800795', gene: 'IL-6', title: 'IL-6 \u2014 Inflammation', category: 'inflammation', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Higher IL-6 Producer', tagClass: 'tag-carrier', detail: 'GG at IL-6 promoter: higher IL-6 levels. Stronger inflammatory response. Anti-inflammatory diet and exercise help regulate.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'Intermediate', tagClass: 'tag-info', detail: 'CG: intermediate IL-6 production.' };
+      if (g === 'CC') return { tag: 'Lower IL-6', tagClass: 'tag-normal', detail: 'CC: lower IL-6 production. Less inflammatory signaling from this locus.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1800629', gene: 'TNF-alpha', title: 'TNF-alpha', category: 'inflammation', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal TNF Production', tagClass: 'tag-normal', detail: 'GG: reference. Normal TNF-alpha production.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Elevated TNF', tagClass: 'tag-carrier', detail: 'AG: one copy of -308A. Increased TNF-alpha, driving more aggressive inflammatory response.' };
+      if (g === 'AA') return { tag: 'High TNF Producer', tagClass: 'tag-risk', detail: 'AA: homozygous -308A. Significantly elevated TNF-alpha production.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs601338', gene: 'FUT2', title: 'Secretor Status', category: 'inflammation', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Non-Secretor', tagClass: 'tag-info', detail: 'GG: non-secretor. Do not secrete ABO antigens into saliva/mucosal surfaces. Resistant to norovirus but different gut microbiome.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Secretor', tagClass: 'tag-info', detail: 'AG: secretor (at least one functional FUT2 allele). Secrete ABO antigens, susceptible to norovirus, different microbiome composition.' };
+      if (g === 'AA') return { tag: 'Secretor', tagClass: 'tag-info', detail: 'AA: secretor. Full FUT2 activity.' };
+      return null;
+    }
+  },
+
+  // ---- AGING ----
+  {
+    id: 'rs10936599', gene: 'TERT', title: 'Telomere Length', category: 'aging', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Longer Telomeres', tagClass: 'tag-normal', detail: 'CC: associated with longer telomeres (biological youth marker).' };
+      if (g === 'CT' || g === 'TC') return { tag: 'One Short Allele', tagClass: 'tag-carrier', detail: 'CT: one copy of the shorter-telomere allele. Exercise, good sleep, and stress management help preserve telomere length.' };
+      if (g === 'TT') return { tag: 'Shorter Telomeres', tagClass: 'tag-risk', detail: 'TT: associated with shorter telomeres. Lifestyle factors (exercise, meditation, sleep) are especially important for telomere preservation.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1051730', gene: 'CHRNA3', title: 'Smoking Response', category: 'aging', color: 'green',
+    interpret: g => {
+      if (g === 'GG' || g === 'CC') return { tag: 'Lower Dependence Risk', tagClass: 'tag-normal', detail: 'Reference genotype. No increased genetic nicotine dependence risk from this variant.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Moderate Risk', tagClass: 'tag-carrier', detail: 'One copy: associated with smoking more cigarettes/day and harder time quitting.' };
+      if (g === 'AA') return { tag: 'Higher Dependence Risk', tagClass: 'tag-risk', detail: 'Two copies: strongest association with heavy smoking, difficulty quitting, and increased lung cancer risk per cigarette.' };
+      return null;
+    }
+  }
+];
+
+// Chromosome sizes in Mb (GRCh37)
+const CHR_SIZES = {
+  '1':249,'2':243,'3':198,'4':191,'5':181,'6':171,'7':159,'8':146,
+  '9':141,'10':136,'11':135,'12':134,'13':115,'14':107,'15':103,'16':90,
+  '17':81,'18':78,'19':59,'20':64,'21':48,'22':51,'X':155,'Y':59,'MT':1
+};
+
+const CHR_COLORS = [
+  '#6366f1','#8b5cf6','#a78bfa','#c084fc','#d946ef','#ec4899','#f43f5e',
+  '#ef4444','#f97316','#eab308','#84cc16','#22c55e','#10b981','#14b8a6',
+  '#06b6d4','#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a78bfa','#c084fc',
+  '#d946ef','#06b6d4','#64748b','#94a3b8'
+];
+
+// ============================================================
+// FILE PARSING
+// ============================================================
+function parseGenomeFile(text) {
+  const snps = {};
+  const chrCounts = {};
+  let totalSNPs = 0;
+  let format = '23andMe';
+
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (line.startsWith('#') || line.trim() === '') continue;
+    const parts = line.split('\t');
+    if (parts.length < 4) {
+      // Try comma separation (AncestryDNA)
+      const cparts = line.split(',');
+      if (cparts.length >= 5) {
+        format = 'AncestryDNA';
+        const rsid = cparts[0].trim().replace(/"/g, '');
+        const chr = cparts[1].trim().replace(/"/g, '');
+        const a1 = cparts[3].trim().replace(/"/g, '');
+        const a2 = cparts[4].trim().replace(/"/g, '');
+        if (rsid.startsWith('rs') || rsid.startsWith('i')) {
+          snps[rsid] = a1 + a2;
+          chrCounts[chr] = (chrCounts[chr] || 0) + 1;
+          totalSNPs++;
+        }
+        continue;
+      }
+      continue;
+    }
+    const rsid = parts[0].trim();
+    const chr = parts[1].trim();
+    const genotype = parts[3].trim();
+    if (rsid && chr && genotype) {
+      snps[rsid] = genotype;
+      chrCounts[chr] = (chrCounts[chr] || 0) + 1;
+      totalSNPs++;
+    }
+  }
+
+  return { snps, chrCounts, totalSNPs, format };
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderGenotype(genotype) {
+  if (!genotype || genotype === '--' || genotype === '??') return '<span class="genotype-display" style="font-size:1rem;color:var(--text-dim)">Not tested</span>';
+  const alleles = genotype.split('');
+  if (alleles.length === 1) {
+    return `<div class="genotype-display"><span class="allele allele-${alleles[0]}">${alleles[0]}</span></div>`;
+  }
+  return `<div class="genotype-display"><span class="allele allele-${alleles[0]}">${alleles[0]}</span><span class="slash">/</span><span class="allele allele-${alleles[1]}">${alleles[1]}</span></div>`;
+}
+
+function renderCard(snpDef, snps) {
+  const genotype = snps[snpDef.id] || null;
+  if (!genotype && !snpDef.multi) return '';
+
+  let result;
+  if (snpDef.multi) {
+    const hasAny = snpDef.multi.some(id => snps[id]);
+    if (!hasAny) return '';
+    result = snpDef.interpret(genotype, snps);
+  } else {
+    result = snpDef.interpret(genotype, snps);
+  }
+  if (!result) return '';
+
+  const displayGenotype = result.genotype || genotype;
+
+  return `
+    <div class="card" data-color="${snpDef.color}">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${snpDef.title}</div>
+          <div class="card-subtitle">${snpDef.gene}</div>
+        </div>
+        <div class="card-gene">${snpDef.multi ? snpDef.multi.join(' / ') : snpDef.id}</div>
+      </div>
+      ${renderGenotype(displayGenotype)}
+      <div class="result-tag ${result.tagClass}">${result.tag}</div>
+      <div class="card-detail">${result.detail}</div>
+    </div>
+  `;
+}
+
+function renderDashboard(data) {
+  const { snps, chrCounts, totalSNPs, format } = data;
+
+  // Subtitle
+  document.getElementById('heroSubtitle').textContent = `${format} \u00B7 Build 37 (GRCh37) \u00B7 ${new Date().toISOString().slice(0, 10)}`;
+
+  // Determine APOE
+  const r358 = snps['rs429358'] || '??';
+  const r7412 = snps['rs7412'] || '??';
+  let apoe = '?';
+  if (r358 === 'TT' && (r7412 === 'CC' || r7412 === 'TT')) apoe = '\u03B53/\u03B53';
+  else if (r358 === 'TT' && r7412 === 'CT') apoe = '\u03B52/\u03B53';
+  else if (r358 === 'CT' && r7412 === 'TT') apoe = '\u03B53/\u03B54';
+  else if (r358 === 'CC') apoe = '\u03B54/\u03B54';
+
+  // COMT
+  const comt = snps['rs4680'] || '??';
+  const comtLabel = comt === 'GG' ? 'Val/Val' : comt === 'AA' ? 'Met/Met' : comt === 'AG' || comt === 'GA' ? 'Val/Met' : '?';
+
+  // Blood type
+  const r719 = snps['rs8176719'] || '??';
+  let bloodType = '?';
+  if (r719 === 'DD' || r719 === '--') bloodType = 'O';
+
+  // Hero stats
+  document.getElementById('heroStats').innerHTML = `
+    <div class="stat"><div class="stat-value">${totalSNPs.toLocaleString()}</div><div class="stat-label">Total SNPs</div></div>
+    <div class="stat"><div class="stat-value">${Object.keys(chrCounts).length}</div><div class="stat-label">Chromosomes</div></div>
+    <div class="stat"><div class="stat-value">${bloodType !== '?' ? bloodType : '\u2014'}</div><div class="stat-label">Blood Type</div></div>
+    <div class="stat"><div class="stat-value">${apoe}</div><div class="stat-label">APOE Status</div></div>
+    <div class="stat"><div class="stat-value">${comtLabel}</div><div class="stat-label">COMT</div></div>
+  `;
+
+  // Summary grid
+  const summaryDefs = SNP_DB.filter(s => s.summary);
+  let summaryHTML = '';
+  for (const def of summaryDefs) {
+    const g = snps[def.id];
+    if (!g) continue;
+    const s = def.summary(g, snps);
+    if (s) summaryHTML += `<div class="summary-item"><div class="emoji">${s.emoji}</div><div class="label">${s.label}</div><div class="value">${s.value}</div></div>`;
+  }
+  document.getElementById('summaryGrid').innerHTML = summaryHTML;
+
+  // Karyogram
+  const chrOrder = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X','Y','MT'];
+  const maxCount = Math.max(...chrOrder.map(c => chrCounts[c] || 0));
+  let karyHTML = '';
+  chrOrder.forEach((chr, i) => {
+    const count = chrCounts[chr] || 0;
+    const pct = (count / maxCount) * 100;
+    const density = CHR_SIZES[chr] ? (count / CHR_SIZES[chr]).toFixed(0) : '?';
+    karyHTML += `
+      <div class="chr-col">
+        <div class="chr-bar" style="height:${pct}%; background: linear-gradient(180deg, ${CHR_COLORS[i]}, ${CHR_COLORS[i]}88);">
+          <div class="tooltip">${chr}: ${count.toLocaleString()} SNPs<br>Density: ${density} SNPs/Mb</div>
+        </div>
+        <div class="chr-label">${chr}</div>
+      </div>
+    `;
+  });
+  document.getElementById('karyogram').innerHTML = karyHTML;
+
+  // Tab categories
+  const categories = [
+    { id: 'identity', label: 'Identity & Traits' },
+    { id: 'neuro', label: 'Brain & Neuro' },
+    { id: 'health', label: 'Health & Risk' },
+    { id: 'athletic', label: 'Athletic' },
+    { id: 'pharma', label: 'Pharmacogenomics' },
+    { id: 'inflammation', label: 'Inflammation & Immune' },
+    { id: 'nutrition', label: 'Nutrition & Metabolism' },
+    { id: 'sleep', label: 'Sleep & Circadian' },
+    { id: 'aging', label: 'Aging & Misc' }
+  ];
+
+  let tabBarHTML = '';
+  let tabContentsHTML = '';
+
+  categories.forEach((cat, ci) => {
+    const cards = SNP_DB.filter(s => s.category === cat.id);
+    let cardsHTML = '';
+    const rendered = new Set();
+    for (const card of cards) {
+      if (rendered.has(card.id)) continue;
+      rendered.add(card.id);
+      cardsHTML += renderCard(card, snps);
+    }
+    if (!cardsHTML) return;
+
+    tabBarHTML += `<div class="tab ${ci === 0 ? 'active' : ''}" data-tab="${cat.id}">${cat.label}</div>`;
+    tabContentsHTML += `<div class="tab-content ${ci === 0 ? 'active' : ''}" id="tab-${cat.id}"><div class="grid">${cardsHTML}</div></div>`;
+  });
+
+  document.getElementById('tabBar').innerHTML = tabBarHTML;
+  document.getElementById('tabContents').innerHTML = tabContentsHTML;
+
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Stagger card animations
+  document.querySelectorAll('.card').forEach((card, i) => {
+    card.style.animationDelay = `${i * 0.04}s`;
+  });
+
+  // Charts
+  renderCharts(snps);
+  startHelixAnimation();
+}
+
+function renderCharts(snps) {
+  // Neurotransmitter radar
+  const comt = snps['rs4680'] || '';
+  const dopClearance = comt === 'GG' ? 9 : comt === 'AA' ? 2 : 5;
+  const bdnf = snps['rs6265'] || '';
+  const bdnfScore = bdnf === 'CC' ? 9 : bdnf === 'TT' ? 3 : 6;
+  const oxtr = snps['rs53576'] || '';
+  const oxtrScore = oxtr === 'GG' ? 9 : oxtr === 'AA' ? 3 : 6;
+  const drd2 = snps['rs1800497'] || '';
+  const drd2Score = drd2 === 'GG' ? 8 : drd2 === 'AA' ? 3 : 5;
+  const oprm = snps['rs1799971'] || '';
+  const oprmScore = oprm === 'AA' ? 5 : oprm === 'GG' ? 8 : 6;
+  const dbh = snps['rs1611115'] || '';
+  const dbhScore = dbh === 'CC' ? 8 : dbh === 'TT' ? 3 : 5;
+  const serotonin = snps['rs6311'] || '';
+  const serScore = (serotonin === 'CT' || serotonin === 'TC') ? 5 : serotonin === 'CC' ? 7 : 4;
+
+  new Chart(document.getElementById('neuroRadar'), {
+    type: 'radar',
+    data: {
+      labels: ['Dopamine\nClearance', 'Serotonin\nSignaling', 'Norepinephrine\nSynthesis', 'BDNF\nPlasticity', 'Opioid\nSensitivity', 'Oxytocin\nSensitivity', 'D2 Receptor\nDensity'],
+      datasets: [{
+        label: 'Your Profile',
+        data: [dopClearance, serScore, dbhScore, bdnfScore, oprmScore, oxtrScore, drd2Score],
+        backgroundColor: 'rgba(99,102,241,0.15)',
+        borderColor: '#6366f1',
+        borderWidth: 2,
+        pointBackgroundColor: '#6366f1',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1,
+        pointRadius: 4
+      }, {
+        label: 'Population Average',
+        data: [5, 5, 5, 7, 5, 5, 6],
+        backgroundColor: 'rgba(136,136,160,0.08)',
+        borderColor: '#555570',
+        borderWidth: 1,
+        borderDash: [4, 4],
+        pointRadius: 2,
+        pointBackgroundColor: '#555570'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { r: { beginAtZero: true, max: 10, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.06)' }, angleLines: { color: 'rgba(255,255,255,0.06)' }, pointLabels: { color: '#8888a0', font: { size: 11 } } } },
+      plugins: { legend: { labels: { color: '#8888a0', font: { size: 11 } } } }
+    }
+  });
+
+  // Risk chart
+  const fto = snps['rs9939609'] || '';
+  const ftoRisk = fto === 'TT' ? 1 : fto === 'AA' ? 8 : 4;
+  const tcf = snps['rs7903146'] || '';
+  const t2dRisk = tcf === 'CC' ? 1 : tcf === 'TT' ? 8 : 5;
+  const fvl = snps['rs6025'] || '';
+  const fvlRisk = fvl === 'CC' ? 1 : fvl === 'TT' ? 9 : 5;
+  const apoeR358 = snps['rs429358'] || '';
+  const apoeRisk = apoeR358 === 'CC' ? 9 : apoeR358 === 'CT' ? 6 : 3;
+  const slco = snps['rs4149056'] || '';
+  const statinRisk = slco === 'TT' ? 1 : slco === 'CC' ? 9 : 5;
+  const il6 = snps['rs1800795'] || '';
+  const inflRisk = il6 === 'GG' ? 6 : il6 === 'CC' ? 2 : 4;
+
+  const riskData = [apoeRisk, t2dRisk, ftoRisk, fvlRisk, 1, 2, statinRisk, inflRisk];
+  const riskColors = riskData.map(r => r <= 3 ? 'rgba(34,197,94,0.7)' : r <= 6 ? 'rgba(234,179,8,0.7)' : 'rgba(239,68,68,0.7)');
+  const riskBorders = riskData.map(r => r <= 3 ? '#22c55e' : r <= 6 ? '#eab308' : '#ef4444');
+
+  new Chart(document.getElementById('riskChart'), {
+    type: 'bar',
+    data: {
+      labels: ["Alzheimer's\n(APOE)", "Type 2\nDiabetes", "Obesity\n(FTO)", "Clotting\n(FVL)", "BRCA", "Blood\nPressure", "Statin\nMyopathy", "Inflammation"],
+      datasets: [{ label: 'Risk', data: riskData, backgroundColor: riskColors, borderColor: riskBorders, borderWidth: 1, borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, indexAxis: 'y',
+      scales: { x: { beginAtZero: true, max: 10, ticks: { color: '#8888a0' }, grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'Risk Score (1=low, 10=high)', color: '#8888a0' } }, y: { ticks: { color: '#8888a0', font: { size: 11 } }, grid: { display: false } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function startHelixAnimation() {
+  const canvas = document.getElementById('helixCanvas');
+  const ctx = canvas.getContext('2d');
+  let frame;
+
+  function resize() {
+    const hero = canvas.parentElement;
+    canvas.width = hero.offsetWidth * 2;
+    canvas.height = hero.offsetHeight * 2;
+    ctx.scale(2, 2);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  function draw() {
+    const w = canvas.width / 2, h = canvas.height / 2;
+    ctx.clearRect(0, 0, w, h);
+    const strands = 3;
+    const cols1 = ['#6366f1', '#8b5cf6', '#ec4899'];
+    const cols2 = ['#3b82f6', '#a78bfa', '#f43f5e'];
+    for (let s = 0; s < strands; s++) {
+      const ox = w * 0.15 + (w * 0.35) * s;
+      const amp = 20 + s * 5;
+      const po = s * 1.2;
+      for (let y = 0; y < h; y += 2) {
+        const phase = y * 0.03 + t + po;
+        const x1 = ox + Math.sin(phase) * amp;
+        const x2 = ox + Math.sin(phase + Math.PI) * amp;
+        const z1 = Math.cos(phase);
+        const z2 = Math.cos(phase + Math.PI);
+        if (y % 20 < 2) { ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.strokeStyle = `rgba(99,102,241,${0.15 + Math.abs(z1) * 0.1})`; ctx.lineWidth = 1; ctx.stroke(); }
+        if (z1 > 0) { ctx.beginPath(); ctx.arc(x1, y, 1.5, 0, Math.PI * 2); ctx.fillStyle = cols1[s]; ctx.globalAlpha = 0.3 + z1 * 0.4; ctx.fill(); }
+        if (z2 > 0) { ctx.beginPath(); ctx.arc(x2, y, 1.5, 0, Math.PI * 2); ctx.fillStyle = cols2[s]; ctx.globalAlpha = 0.3 + z2 * 0.4; ctx.fill(); }
+        ctx.globalAlpha = 1;
+      }
+    }
+    t += 0.015;
+    frame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ============================================================
+// FILE UPLOAD HANDLING
+// ============================================================
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'flex';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('loading-status').textContent = 'Analyzing variants...';
+    // Use setTimeout to allow UI update
+    setTimeout(() => {
+      const data = parseGenomeFile(e.target.result);
+      document.getElementById('loading-status').textContent = `Found ${data.totalSNPs.toLocaleString()} SNPs. Rendering dashboard...`;
+      setTimeout(() => {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        renderDashboard(data);
+      }, 300);
+    }, 100);
+  };
+  reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>
