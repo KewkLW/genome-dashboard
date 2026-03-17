@@ -974,15 +974,15 @@
     <div class="icon">&#x1F9EC;</div>
     <div class="main-text">Drop your genome file here</div>
     <div class="sub-text">or click to browse</div>
-    <input type="file" id="fileInput" accept=".txt,.csv,.zip">
+    <input type="file" id="fileInput" accept=".txt,.csv,.zip,.vcf,.gz,.tsv">
   </div>
 
   <div class="privacy-note">
-    <strong>100% Private.</strong> Your genome data never leaves your browser. All parsing and analysis happens client-side in JavaScript. No data is uploaded to any server. The source code is fully open for inspection.
+    <strong>100% Private.</strong> Your genome data never leaves your browser. All parsing and analysis happens client-side in JavaScript. No data is uploaded to any server. The source code is fully open for inspection. Works with raw data exports from any major genotyping service.
   </div>
 
   <div class="supported">
-    Supported: 23andMe v3/v4/v5 raw data (.txt), AncestryDNA (.txt)
+    Supported: 23andMe (.txt), AncestryDNA (.txt), MyHeritage (.csv), FamilyTreeDNA (.csv), LivingDNA (.csv), Nebula/Dante WGS (.vcf), Genes for Good (.txt)
   </div>
 </div>
 
@@ -1463,37 +1463,169 @@ const CHR_COLORS = [
 // ============================================================
 // FILE PARSING
 // ============================================================
+function detectFormat(lines) {
+  // Check first ~20 non-empty, non-comment lines + comments for format clues
+  const comments = [];
+  const dataLines = [];
+  for (const line of lines) {
+    if (dataLines.length >= 20) break;
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith('#') || trimmed.startsWith('//')) { comments.push(trimmed); continue; }
+    dataLines.push(trimmed);
+  }
+
+  const commentBlock = comments.join('\n').toLowerCase();
+  const firstData = dataLines[0] || '';
+  const firstLower = firstData.toLowerCase();
+
+  // VCF: ##fileformat=VCFv or first data line has CHROM POS ID REF ALT
+  if (commentBlock.includes('##fileformat=vcf') || firstLower.startsWith('#chrom')) return 'VCF';
+  for (const c of comments) { if (c.toLowerCase().includes('##fileformat=vcf')) return 'VCF'; }
+
+  // 23andMe: comment lines mention "23andMe" or tab-separated with rsid chr pos genotype
+  if (commentBlock.includes('23andme')) return '23andMe';
+
+  // MyHeritage: header contains "RSID,CHROMOSOME,POSITION,RESULT" (single result column)
+  if (firstLower.includes('rsid') && firstLower.includes('result') && firstLower.includes(',')) return 'MyHeritage';
+
+  // FamilyTreeDNA: header "RSID,CHROMOSOME,POSITION,ALLELE1,ALLELE2" or similar CSV with 2 allele columns
+  // Also LivingDNA uses similar format
+  if (firstLower.includes('rsid') && firstLower.includes('chromosome') && firstLower.includes(',')) {
+    if (firstLower.includes('allele1') || firstLower.includes('allele 1')) return 'FTDNA';
+    return 'FTDNA'; // generic CSV with header
+  }
+
+  // AncestryDNA: CSV, first data field starts with rs, 5+ comma-separated columns, no header keyword
+  const cparts = firstData.split(',');
+  if (cparts.length >= 5) {
+    const field0 = cparts[0].trim().replace(/"/g, '');
+    if (field0.startsWith('rs') || field0.startsWith('i')) return 'AncestryDNA';
+  }
+
+  // Genes for Good: tab-separated, similar to 23andMe but different header comments
+  if (commentBlock.includes('genes for good')) return 'GenesForGood';
+
+  // Default: try 23andMe-style tab-separated
+  const tabs = firstData.split('\t');
+  if (tabs.length >= 4 && (tabs[0].startsWith('rs') || tabs[0].startsWith('i'))) return '23andMe';
+
+  return 'Unknown';
+}
+
 function parseGenomeFile(text) {
   const snps = {};
   const chrCounts = {};
   let totalSNPs = 0;
-  let format = '23andMe';
 
   const lines = text.split('\n');
+  const format = detectFormat(lines);
+
   for (const line of lines) {
-    if (line.startsWith('#') || line.trim() === '') continue;
-    const parts = line.split('\t');
-    if (parts.length < 4) {
-      // Try comma separation (AncestryDNA)
-      const cparts = line.split(',');
-      if (cparts.length >= 5) {
-        format = 'AncestryDNA';
-        const rsid = cparts[0].trim().replace(/"/g, '');
-        const chr = cparts[1].trim().replace(/"/g, '');
-        const a1 = cparts[3].trim().replace(/"/g, '');
-        const a2 = cparts[4].trim().replace(/"/g, '');
-        if (rsid.startsWith('rs') || rsid.startsWith('i')) {
-          snps[rsid] = a1 + a2;
-          chrCounts[chr] = (chrCounts[chr] || 0) + 1;
-          totalSNPs++;
-        }
-        continue;
-      }
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Skip all comment lines (but VCF header line #CHROM is handled below)
+    if (trimmed.startsWith('#') || trimmed.startsWith('//')) {
+      // VCF: parse the header line to confirm column positions (they're standard, but be safe)
+      if (format === 'VCF' && trimmed.startsWith('#CHROM')) continue;
       continue;
     }
-    const rsid = parts[0].trim();
-    const chr = parts[1].trim();
-    const genotype = parts[3].trim();
+
+    let rsid, chr, genotype;
+
+    if (format === 'VCF') {
+      // VCF: CHROM POS ID REF ALT QUAL FILTER INFO [FORMAT SAMPLE...]
+      const cols = trimmed.split('\t');
+      if (cols.length < 8) continue;
+      chr = cols[0].replace('chr', '');
+      rsid = cols[2]; // ID column
+      const ref = cols[3];
+      const alt = cols[4];
+
+      // Only process entries with rsIDs
+      if (!rsid.startsWith('rs')) continue;
+      // Skip multi-allelic for simplicity (commas in ALT)
+      if (alt.includes(',')) continue;
+      // Skip indels (ref or alt longer than 1 base)
+      if (ref.length > 1 || (alt !== '.' && alt.length > 1)) continue;
+
+      // Get genotype from sample column (FORMAT is col 8, sample is col 9)
+      if (cols.length >= 10) {
+        const fmt = cols[8].split(':');
+        const samp = cols[9].split(':');
+        const gtIdx = fmt.indexOf('GT');
+        if (gtIdx === -1) continue;
+        const gt = samp[gtIdx] || '';
+        // GT is like 0/0, 0/1, 1/1, 0|1, etc.
+        const alleles = gt.replace(/[|/]/g, ' ').split(' ');
+        const alleleMap = { '0': ref, '1': alt, '.': '-' };
+        const a1 = alleleMap[alleles[0]] || ref;
+        const a2 = alleleMap[alleles[1]] || ref;
+        genotype = a1.toUpperCase() + a2.toUpperCase();
+      } else {
+        // No sample column, skip
+        continue;
+      }
+    } else if (format === 'MyHeritage') {
+      // CSV: RSID,CHROMOSOME,POSITION,RESULT (result is like "AA", "AG", etc.)
+      // Skip header
+      if (trimmed.toLowerCase().startsWith('rsid')) continue;
+      const cols = trimmed.split(',').map(c => c.trim().replace(/"/g, ''));
+      if (cols.length < 4) continue;
+      rsid = cols[0];
+      chr = cols[1];
+      genotype = cols[3]; // single "result" column with both alleles
+      if (!rsid.startsWith('rs') && !rsid.startsWith('i')) continue;
+    } else if (format === 'FTDNA') {
+      // CSV: RSID,CHROMOSOME,POSITION,ALLELE1,ALLELE2 (or similar)
+      // Also covers LivingDNA and generic CSV-with-header
+      if (trimmed.toLowerCase().startsWith('rsid')) continue;
+      const cols = trimmed.split(',').map(c => c.trim().replace(/"/g, ''));
+      if (cols.length >= 5) {
+        rsid = cols[0];
+        chr = cols[1];
+        genotype = cols[3] + cols[4];
+      } else if (cols.length >= 4) {
+        // Some exports use a single result column
+        rsid = cols[0];
+        chr = cols[1];
+        genotype = cols[3];
+      } else continue;
+      if (!rsid.startsWith('rs') && !rsid.startsWith('i')) continue;
+    } else if (format === 'AncestryDNA') {
+      const cparts = trimmed.split(',');
+      if (cparts.length < 5) continue;
+      rsid = cparts[0].trim().replace(/"/g, '');
+      chr = cparts[1].trim().replace(/"/g, '');
+      const a1 = cparts[3].trim().replace(/"/g, '');
+      const a2 = cparts[4].trim().replace(/"/g, '');
+      if (!rsid.startsWith('rs') && !rsid.startsWith('i')) continue;
+      genotype = a1 + a2;
+    } else {
+      // 23andMe, Genes for Good, or Unknown: tab-separated rsid chr pos genotype
+      const parts = trimmed.split('\t');
+      if (parts.length < 4) {
+        // Last resort: try comma-separated without header
+        const cparts = trimmed.split(',').map(c => c.trim().replace(/"/g, ''));
+        if (cparts.length >= 5 && (cparts[0].startsWith('rs') || cparts[0].startsWith('i'))) {
+          rsid = cparts[0]; chr = cparts[1]; genotype = cparts[3] + cparts[4];
+        } else if (cparts.length >= 4 && (cparts[0].startsWith('rs') || cparts[0].startsWith('i'))) {
+          rsid = cparts[0]; chr = cparts[1]; genotype = cparts[3];
+        } else continue;
+      } else {
+        rsid = parts[0].trim();
+        chr = parts[1].trim();
+        genotype = parts[3].trim();
+      }
+    }
+
+    // Normalize chromosome naming
+    if (chr) chr = chr.replace(/^chr/i, '');
+
+    // Clean genotype
+    if (!genotype || genotype === '--' || genotype === '00' || genotype === '..') genotype = '--';
+
     if (rsid && chr && genotype) {
       snps[rsid] = genotype;
       chrCounts[chr] = (chrCounts[chr] || 0) + 1;
@@ -1501,7 +1633,8 @@ function parseGenomeFile(text) {
     }
   }
 
-  return { snps, chrCounts, totalSNPs, format };
+  const formatLabel = format === 'FTDNA' ? 'FamilyTreeDNA' : format === 'GenesForGood' ? 'Genes for Good' : format;
+  return { snps, chrCounts, totalSNPs, format: formatLabel };
 }
 
 // ============================================================
