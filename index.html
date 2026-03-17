@@ -699,6 +699,258 @@
 
   .new-file-btn:hover { border-color: var(--accent); color: var(--text); }
 
+  /* Supplement Analyzer */
+  .supp-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 20px;
+  }
+
+  .supp-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .supp-section-title .icon { font-size: 1.3rem; }
+
+  .supp-search-wrap {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .supp-search {
+    width: 100%;
+    padding: 14px 20px 14px 44px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .supp-search::placeholder { color: var(--text-dim); }
+  .supp-search:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(99,102,241,0.1); }
+
+  .supp-search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .supp-autocomplete {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+  }
+
+  .supp-autocomplete.visible { display: block; }
+
+  .supp-ac-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
+  }
+
+  .supp-ac-item:hover { background: rgba(99,102,241,0.1); }
+  .supp-ac-item .ac-name { font-weight: 500; }
+  .supp-ac-item .ac-cat { font-size: 0.72rem; color: var(--text-dim); }
+
+  .supp-result {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .supp-result.visible { display: block; }
+
+  .supp-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .supp-result-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .supp-result-cat {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    background: rgba(136,136,160,0.1);
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+
+  .supp-verdict {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .verdict-recommended { background: rgba(34,197,94,0.15); color: var(--green); }
+  .verdict-beneficial { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .verdict-neutral { background: rgba(136,136,160,0.15); color: var(--text-dim); }
+  .verdict-caution { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .verdict-avoid { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .supp-gene-interactions {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .supp-gene-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .supp-gene-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(99,102,241,0.1);
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .supp-gene-text { color: var(--text-dim); }
+  .supp-gene-text strong { color: var(--text); }
+
+  .supp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+
+  .supp-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .supp-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(99,102,241,0.08);
+  }
+
+  .supp-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .supp-card.rec-high::before { background: var(--green); }
+  .supp-card.rec-moderate::before { background: var(--blue); }
+  .supp-card.rec-caution::before { background: var(--yellow); }
+  .supp-card.rec-avoid::before { background: var(--red); }
+
+  .supp-card-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .supp-card-reason {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .supp-card-genes {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .supp-card-gene {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(99,102,241,0.08);
+    color: var(--accent);
+  }
+
+  .supp-subsection-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .supp-subsection-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .supp-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .hero h1 { font-size: 2rem; }
@@ -792,6 +1044,33 @@
           </div>
         </details>
       </div>
+    </div>
+
+    <!-- Supplement Analyzer -->
+    <div class="supp-section" id="suppSection">
+      <div class="supp-section-title"><span class="icon">&#x1F48A;</span> Supplement Analyzer</div>
+      <div class="supp-search-wrap">
+        <span class="supp-search-icon">&#x1F50D;</span>
+        <input type="text" class="supp-search" id="suppSearch" placeholder="Search a supplement (e.g. Magnesium, Vitamin D, Creatine...)" autocomplete="off">
+        <div class="supp-autocomplete" id="suppAutocomplete"></div>
+      </div>
+      <div class="supp-result" id="suppResult"></div>
+
+      <div class="supp-subsection-title"><span class="dot" style="background:var(--green)"></span> Recommended Based on Your Genetics</div>
+      <div class="supp-grid" id="suppRecommended"></div>
+
+      <div class="supp-subsection-title" style="margin-top:28px"><span class="dot" style="background:var(--yellow)"></span> Use with Caution</div>
+      <div class="supp-grid" id="suppCaution"></div>
+
+      <details class="info-panel" style="border:none;padding:12px 0 0;margin-top:16px;">
+        <summary>How the supplement analyzer works</summary>
+        <div class="panel-body">
+          <p>This tool cross-references <strong>your genotype</strong> at well-studied SNPs with published research on how those genetic variants affect supplement metabolism, absorption, and efficacy. Each recommendation is personalized to your DNA.</p>
+          <p><strong>Recommended:</strong> Supplements where your genetics suggest clear benefit (e.g., methylfolate for MTHFR variants, CoQ10 for SLCO1B1 carriers).</p>
+          <p><strong>Caution:</strong> Supplements that may interact unfavorably with your genetics or require dose adjustments.</p>
+          <p>This is <strong>not medical advice</strong>. Always discuss supplements with your healthcare provider, especially if you take medications. Gene-supplement interactions are one piece of a larger picture that includes diet, lifestyle, medications, and lab work.</p>
+        </div>
+      </details>
     </div>
 
     <div class="tabs" id="tabBar"></div>
@@ -1384,6 +1663,9 @@ function renderDashboard(data) {
   // Charts
   renderCharts(snps);
   startHelixAnimation();
+
+  // Supplement analyzer
+  renderSupplementSection(snps);
 }
 
 function renderCharts(snps) {
@@ -1569,6 +1851,705 @@ function startHelixAnimation() {
 }
 
 // ============================================================
+// SUPPLEMENT DATABASE
+// ============================================================
+const SUPPLEMENT_DB = [
+  {
+    name: 'Methylfolate (5-MTHF)',
+    aliases: ['methylfolate', '5-mthf', 'l-methylfolate', 'folate', 'folic acid', 'methyl folate'],
+    category: 'B Vitamins',
+    genes: [
+      { snps: ['rs1801133', 'rs1801131'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          const a1298c = all['rs1801131'] || '';
+          const homo = c677t === 'AA';
+          const het677 = c677t === 'GA' || c677t === 'AG';
+          const has1298 = a1298c !== 'TT' && a1298c !== '' && a1298c !== '--';
+          if (homo) return { verdict: 'recommended', priority: 10, text: `Your MTHFR is homozygous C677T (${c677t}), reducing enzyme activity to ~30%. You convert folic acid very poorly. <strong>Methylfolate (5-MTHF) bypasses this entirely</strong> and is strongly recommended over folic acid. Typical dose: 400-800 mcg/day. Pair with methylcobalamin (B12).` };
+          if (het677 && has1298) return { verdict: 'recommended', priority: 8, text: `Compound heterozygous: C677T (${c677t}) + A1298C (${a1298c}). Combined reduction in methylation. <strong>Methylfolate is recommended</strong> as your preferred folate form. Consider 400 mcg/day with B12.` };
+          if (het677) return { verdict: 'beneficial', priority: 5, text: `One copy of C677T (${c677t}). MTHFR at ~65% activity. Methylfolate is a better choice than folic acid, though your enzyme still works reasonably well. Consider it if homocysteine is elevated.` };
+          return { verdict: 'neutral', priority: 1, text: `Your MTHFR is normal (${c677t}). You convert folic acid to methylfolate efficiently. Either form of folate works for you, though methylfolate is never a bad choice.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Vitamin B12 (Methylcobalamin)',
+    aliases: ['b12', 'vitamin b12', 'methylcobalamin', 'cobalamin', 'cyanocobalamin', 'methyl b12'],
+    category: 'B Vitamins',
+    genes: [
+      { snps: ['rs1801133'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          if (c677t === 'AA') return { verdict: 'recommended', priority: 9, text: `With homozygous MTHFR C677T (${c677t}), methylcobalamin is preferred over cyanocobalamin. <strong>B12 works synergistically with methylfolate</strong> to keep the methylation cycle running and homocysteine low. 1000 mcg sublingual methylcobalamin recommended.` };
+          if (c677t === 'AG' || c677t === 'GA') return { verdict: 'beneficial', priority: 5, text: `One copy of C677T. Methylcobalamin supports your methylation cycle. Worth considering, especially alongside methylfolate.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal MTHFR. Standard B12 supplementation guidelines apply. Either methylcobalamin or cyanocobalamin works.` };
+        }
+      },
+      { snps: ['rs601338'], gene: 'FUT2',
+        assess: (all) => {
+          const fut2 = all['rs601338'] || '';
+          if (fut2 === 'GG') return { verdict: 'recommended', priority: 8, text: `You are a <strong>non-secretor</strong> (FUT2 GG). Non-secretors have significantly lower B12 absorption from food due to altered gut microbiome composition. <strong>B12 supplementation is especially important for you.</strong> Sublingual or high-dose oral forms bypass some absorption issues.` };
+          return { verdict: 'neutral', priority: 0, text: `Secretor status (${fut2}): normal B12 absorption expected from food sources.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Riboflavin (Vitamin B2)',
+    aliases: ['riboflavin', 'vitamin b2', 'b2'],
+    category: 'B Vitamins',
+    genes: [
+      { snps: ['rs1801133'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          if (c677t === 'AA') return { verdict: 'recommended', priority: 8, text: `Riboflavin is the cofactor for MTHFR. With homozygous C677T (${c677t}), your MTHFR enzyme is thermolabile (unstable). <strong>Riboflavin stabilizes the enzyme and partially rescues its activity.</strong> Studies show B2 supplementation lowers homocysteine specifically in 677TT individuals. 25-50 mg/day.` };
+          if (c677t === 'AG' || c677t === 'GA') return { verdict: 'beneficial', priority: 4, text: `Riboflavin supports MTHFR function. With one C677T copy, it may help maintain optimal enzyme activity.` };
+          return { verdict: 'neutral', priority: 0, text: `Normal MTHFR. Riboflavin is still a useful B vitamin but you have no special genetic need.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Vitamin B6 (P5P)',
+    aliases: ['vitamin b6', 'b6', 'pyridoxine', 'p5p', 'pyridoxal 5 phosphate', 'pyridoxal'],
+    category: 'B Vitamins',
+    genes: [
+      { snps: ['rs1801133'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          if (c677t === 'AA' || c677t === 'AG' || c677t === 'GA') return { verdict: 'beneficial', priority: 5, text: `B6 is a cofactor in the homocysteine-to-cysteine pathway (transsulfuration). With MTHFR variants (${c677t}), homocysteine may accumulate. <strong>B6 provides an alternate route to clear homocysteine.</strong> P5P (pyridoxal-5-phosphate) is the active form. 25-50 mg/day.` };
+          return { verdict: 'neutral', priority: 0, text: `Normal MTHFR. B6 is broadly useful for neurotransmitter synthesis but no specific genetic urgency.` };
+        }
+      },
+      { snps: ['rs4680'], gene: 'COMT',
+        assess: (all) => {
+          const comt = all['rs4680'] || '';
+          if (comt === 'AA') return { verdict: 'beneficial', priority: 4, text: `Met/Met COMT (${comt}) means slower catecholamine breakdown. B6 is a cofactor for multiple neurotransmitter synthesis pathways. It supports balanced dopamine/serotonin production. Moderate doses (25 mg) are reasonable.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Magnesium',
+    aliases: ['magnesium', 'mag', 'magnesium glycinate', 'magnesium threonate', 'magnesium citrate', 'magnesium malate', 'magnesium taurate', 'magnesium l-threonate'],
+    category: 'Minerals',
+    genes: [
+      { snps: ['rs4680'], gene: 'COMT',
+        assess: (all) => {
+          const comt = all['rs4680'] || '';
+          if (comt === 'AA') return { verdict: 'recommended', priority: 8, text: `Met/Met COMT (${comt}) means slow dopamine clearance and tendency toward anxiety, especially under stress. <strong>Magnesium is a natural COMT cofactor and calming mineral.</strong> It supports COMT function and GABA activity. Magnesium glycinate or L-threonate (crosses blood-brain barrier) at 200-400 mg/day is well-suited.` };
+          if (comt === 'AG' || comt === 'GA') return { verdict: 'beneficial', priority: 5, text: `Val/Met COMT (${comt}). Magnesium supports COMT enzyme function and stress resilience. Broadly beneficial at 200-400 mg/day.` };
+          return { verdict: 'beneficial', priority: 3, text: `Val/Val COMT. Magnesium is broadly beneficial for enzymatic reactions, sleep, and muscle function, though you have less genetic urgency from the COMT angle.` };
+        }
+      },
+      { snps: ['rs1801260'], gene: 'CLOCK',
+        assess: (all) => {
+          const clock = all['rs1801260'] || '';
+          if (clock === 'GG' || clock === 'CC') return { verdict: 'beneficial', priority: 4, text: `Night owl chronotype (CLOCK ${clock}). Magnesium glycinate taken in the evening can help promote sleep onset by activating GABA receptors and regulating melatonin.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Omega-3 (EPA/DHA)',
+    aliases: ['omega 3', 'omega-3', 'fish oil', 'epa', 'dha', 'epa/dha', 'krill oil', 'algae oil', 'cod liver oil', 'omega3'],
+    category: 'Fatty Acids',
+    genes: [
+      { snps: ['rs429358', 'rs7412'], gene: 'APOE',
+        assess: (all) => {
+          const r358 = all['rs429358'] || '';
+          const r7412 = all['rs7412'] || '';
+          const hasE4 = r358 === 'CT' || r358 === 'CC';
+          if (hasE4) return { verdict: 'recommended', priority: 9, text: `APOE e4 carrier (rs429358: ${r358}). <strong>DHA is critical for you.</strong> APOE e4 impairs brain cholesterol transport and amyloid clearance. DHA supports neuronal membrane integrity and has shown neuroprotective effects specifically in e4 carriers. 1-2g EPA+DHA daily from fish oil or algae oil. This is one of your most actionable supplements.` };
+          return { verdict: 'beneficial', priority: 4, text: `APOE e3 (no e4 risk allele). Omega-3s are broadly anti-inflammatory and support cardiovascular and brain health, though you lack the APOE-specific urgency.` };
+        }
+      },
+      { snps: ['rs1800795'], gene: 'IL-6',
+        assess: (all) => {
+          const il6 = all['rs1800795'] || '';
+          if (il6 === 'GG') return { verdict: 'recommended', priority: 7, text: `Higher IL-6 producer (${il6}). EPA/DHA directly suppress IL-6 transcription and downstream inflammatory cascades. <strong>Omega-3s are especially effective for your pro-inflammatory genotype.</strong> Aim for 2g+ combined EPA/DHA.` };
+          return null;
+        }
+      },
+      { snps: ['rs1800629'], gene: 'TNF-alpha',
+        assess: (all) => {
+          const tnf = all['rs1800629'] || '';
+          if (tnf === 'AG' || tnf === 'GA' || tnf === 'AA') return { verdict: 'beneficial', priority: 5, text: `Elevated TNF-alpha producer (${tnf}). Omega-3 fatty acids help modulate TNF-alpha signaling and reduce systemic inflammation.` };
+          return null;
+        }
+      },
+      { snps: ['rs6265'], gene: 'BDNF',
+        assess: (all) => {
+          const bdnf = all['rs6265'] || '';
+          if (bdnf === 'CT' || bdnf === 'TC' || bdnf === 'TT') return { verdict: 'beneficial', priority: 5, text: `Reduced BDNF secretion (${bdnf}). DHA is a structural component of neuronal membranes and supports BDNF expression. Particularly valuable alongside exercise for neuroplasticity.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Vitamin D3',
+    aliases: ['vitamin d', 'vitamin d3', 'd3', 'cholecalciferol', 'vit d'],
+    category: 'Vitamins',
+    genes: [
+      { snps: ['rs1800795'], gene: 'IL-6',
+        assess: (all) => {
+          const il6 = all['rs1800795'] || '';
+          if (il6 === 'GG') return { verdict: 'recommended', priority: 7, text: `Higher IL-6 producer (${il6}). Vitamin D3 is a potent immune modulator that <strong>suppresses pro-inflammatory cytokines including IL-6</strong>. Adequate D3 (2000-5000 IU/day, guided by blood levels) is especially important for your inflammatory genotype.` };
+          return { verdict: 'beneficial', priority: 4, text: `Vitamin D3 supports immune regulation, bone health, and mood. Most people are deficient. 2000-4000 IU/day is a reasonable maintenance dose; check 25(OH)D blood levels to optimize.` };
+        }
+      },
+      { snps: ['rs2187668'], gene: 'HLA-DQ2.5',
+        assess: (all) => {
+          const hla = all['rs2187668'] || '';
+          if (hla === 'AG' || hla === 'GA' || hla === 'AA' || hla === 'AC' || hla === 'CA') return { verdict: 'beneficial', priority: 5, text: `HLA-DQ2.5 carrier: elevated celiac risk. Vitamin D3 supports intestinal barrier integrity and modulates the autoimmune response. Important for gut health in individuals with celiac-risk HLA types.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Curcumin / Turmeric',
+    aliases: ['curcumin', 'turmeric', 'curcuma', 'turmeric extract'],
+    category: 'Anti-inflammatory',
+    genes: [
+      { snps: ['rs1800795'], gene: 'IL-6',
+        assess: (all) => {
+          const il6 = all['rs1800795'] || '';
+          if (il6 === 'GG') return { verdict: 'recommended', priority: 7, text: `Higher IL-6 producer (${il6}). <strong>Curcumin directly inhibits NF-kB, the master switch for IL-6 and other inflammatory cytokines.</strong> Highly effective for your genotype. Use with piperine (black pepper) or liposomal forms for absorption. 500-1000 mg/day.` };
+          if (il6 === 'CG' || il6 === 'GC') return { verdict: 'beneficial', priority: 4, text: `Intermediate IL-6 production. Curcumin offers anti-inflammatory benefits. Use bioavailable forms (with piperine or liposomal).` };
+          return { verdict: 'neutral', priority: 1, text: `Lower IL-6 production. Curcumin is still a good anti-inflammatory but you have less genetic urgency.` };
+        }
+      },
+      { snps: ['rs1800629'], gene: 'TNF-alpha',
+        assess: (all) => {
+          const tnf = all['rs1800629'] || '';
+          if (tnf === 'AG' || tnf === 'GA' || tnf === 'AA') return { verdict: 'recommended', priority: 7, text: `Elevated TNF-alpha (${tnf}). Curcumin is one of the most potent natural TNF-alpha inhibitors. <strong>Your genotype makes curcumin especially valuable.</strong>` };
+          return null;
+        }
+      },
+      { snps: ['rs429358'], gene: 'APOE',
+        assess: (all) => {
+          const r358 = all['rs429358'] || '';
+          if (r358 === 'CT' || r358 === 'CC') return { verdict: 'beneficial', priority: 5, text: `APOE e4 carrier. Curcumin has shown ability to reduce amyloid-beta aggregation in preclinical studies. Anti-inflammatory and neuroprotective; a reasonable addition for e4 carriers.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'CoQ10 (Ubiquinol)',
+    aliases: ['coq10', 'ubiquinol', 'ubiquinone', 'coenzyme q10', 'co-q10'],
+    category: 'Antioxidants',
+    genes: [
+      { snps: ['rs4149056'], gene: 'SLCO1B1',
+        assess: (all) => {
+          const slco = all['rs4149056'] || '';
+          if (slco === 'CC') return { verdict: 'recommended', priority: 9, text: `Homozygous SLCO1B1 variant (${slco}). <strong>If you take statins, CoQ10 is strongly recommended.</strong> Your genotype causes statins to accumulate in muscle tissue (16.9x myopathy risk with simvastatin). Statins also deplete CoQ10. 100-200 mg ubiquinol daily helps protect against statin-induced muscle damage.` };
+          if (slco === 'CT' || slco === 'TC') return { verdict: 'recommended', priority: 7, text: `Heterozygous SLCO1B1 (${slco}). 4.5x increased statin myopathy risk. <strong>CoQ10 supplementation is recommended if on statins.</strong> 100 mg ubiquinol daily.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal SLCO1B1 (${slco}). CoQ10 is still a good antioxidant for energy production but you have no special statin-related need.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Creatine',
+    aliases: ['creatine', 'creatine monohydrate', 'creatine hcl'],
+    category: 'Performance',
+    genes: [
+      { snps: ['rs1815739'], gene: 'ACTN3',
+        assess: (all) => {
+          const actn3 = all['rs1815739'] || '';
+          if (actn3 === 'CC') return { verdict: 'recommended', priority: 7, text: `Power genotype (ACTN3 RR, ${actn3}). Full fast-twitch fiber expression. <strong>Creatine is especially effective for power/sprint athletes with your genotype</strong>, enhancing phosphocreatine stores for explosive movements. 3-5g/day.` };
+          if (actn3 === 'CT' || actn3 === 'TC') return { verdict: 'beneficial', priority: 5, text: `Mixed fiber type (ACTN3 RX, ${actn3}). Creatine benefits both power and high-intensity endurance. 3-5g/day.` };
+          if (actn3 === 'TT') return { verdict: 'beneficial', priority: 4, text: `Endurance genotype (ACTN3 XX, ${actn3}). Creatine still improves high-intensity intervals and recovery. Also has cognitive benefits (brain uses creatine for energy). 3-5g/day.` };
+          return { verdict: 'beneficial', priority: 3, text: `Creatine is one of the most well-researched supplements. Benefits power, cognition, and recovery regardless of genotype.` };
+        }
+      },
+      { snps: ['rs6265'], gene: 'BDNF',
+        assess: (all) => {
+          const bdnf = all['rs6265'] || '';
+          if (bdnf === 'CT' || bdnf === 'TC' || bdnf === 'TT') return { verdict: 'beneficial', priority: 4, text: `Reduced BDNF (${bdnf}). Creatine supports brain energy metabolism and has shown neuroprotective effects. It may help compensate for reduced neuroplasticity.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'NAC (N-Acetyl Cysteine)',
+    aliases: ['nac', 'n-acetyl cysteine', 'n-acetylcysteine', 'nacetylcysteine'],
+    category: 'Antioxidants',
+    genes: [
+      { snps: ['rs1801133'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          if (c677t === 'AA' || c677t === 'AG' || c677t === 'GA') return { verdict: 'beneficial', priority: 6, text: `MTHFR variant (${c677t}). NAC boosts glutathione production, your body's master antioxidant. Impaired methylation can reduce glutathione synthesis, making <strong>NAC especially helpful for MTHFR carriers</strong>. 600-1200 mg/day.` };
+          return { verdict: 'beneficial', priority: 3, text: `Normal MTHFR. NAC is still an excellent glutathione precursor and supports liver detoxification and respiratory health.` };
+        }
+      },
+      { snps: ['rs671'], gene: 'ALDH2',
+        assess: (all) => {
+          const aldh2 = all['rs671'] || '';
+          if (aldh2 === 'AG' || aldh2 === 'GA' || aldh2 === 'AA') return { verdict: 'recommended', priority: 8, text: `ALDH2 deficient (${aldh2}). You accumulate acetaldehyde (toxic). <strong>NAC binds acetaldehyde directly and supports its clearance.</strong> If you ever consume alcohol, NAC taken beforehand can help reduce acetaldehyde damage. Also supports glutathione which is depleted by acetaldehyde.` };
+          return null;
+        }
+      },
+      { snps: ['rs1800497'], gene: 'DRD2',
+        assess: (all) => {
+          const drd2 = all['rs1800497'] || '';
+          if (drd2 === 'AG' || drd2 === 'GA' || drd2 === 'AA') return { verdict: 'beneficial', priority: 5, text: `Reduced D2 receptor density (${drd2}). NAC modulates glutamate, which influences dopamine signaling. Studies show NAC can reduce compulsive behaviors and cravings, relevant for lower D2 density.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Melatonin',
+    aliases: ['melatonin'],
+    category: 'Sleep',
+    genes: [
+      { snps: ['rs1801260'], gene: 'CLOCK',
+        assess: (all) => {
+          const clock = all['rs1801260'] || '';
+          if (clock === 'GG' || clock === 'CC') return { verdict: 'recommended', priority: 7, text: `Night owl chronotype (CLOCK ${clock}). Your circadian clock gene pushes your sleep phase later. <strong>Low-dose melatonin (0.3-1 mg) taken 1-2 hours before desired bedtime can help shift your circadian rhythm earlier.</strong> Avoid high doses; more is not better with melatonin.` };
+          if (clock === 'AG' || clock === 'GA' || clock === 'TC' || clock === 'CT') return { verdict: 'beneficial', priority: 3, text: `Slight evening preference (CLOCK ${clock}). Low-dose melatonin may help if you struggle with sleep onset.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal chronotype. Melatonin can help with jet lag or occasional insomnia but you have no genetic predisposition toward delayed sleep.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Lactase Enzyme',
+    aliases: ['lactase', 'lactaid', 'lactase enzyme', 'dairy enzyme'],
+    category: 'Digestive',
+    genes: [
+      { snps: ['rs4988235'], gene: 'MCM6/LCT',
+        assess: (all) => {
+          const lct = all['rs4988235'] || '';
+          if (lct === 'GG' || lct === 'CC') return { verdict: 'recommended', priority: 8, text: `Lactose intolerant genotype (${lct}). Your lactase production declines in adulthood. <strong>Lactase enzyme supplements before dairy will prevent gas, bloating, and GI distress.</strong> Take with the first bite of dairy.` };
+          return { verdict: 'neutral', priority: 0, text: `Lactose persistent (${lct}). You digest dairy fine. No need for lactase.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Vitamin K2 (MK-7)',
+    aliases: ['vitamin k', 'vitamin k2', 'k2', 'mk-7', 'mk7', 'menaquinone'],
+    category: 'Vitamins',
+    genes: [
+      { snps: ['rs9923231'], gene: 'VKORC1',
+        assess: (all) => {
+          const vkorc = all['rs9923231'] || '';
+          if (vkorc === 'TT' || vkorc === 'AA') return { verdict: 'caution', priority: 7, text: `High warfarin sensitivity (VKORC1 ${vkorc}). <strong>Your vitamin K cycle is already genetically sensitive.</strong> If you take blood thinners (warfarin/Coumadin), vitamin K2 supplementation can dangerously alter your INR. Discuss with your doctor before using. If NOT on warfarin, K2 is fine and pairs well with D3 for calcium routing.` };
+          if (vkorc === 'CT' || vkorc === 'TC' || vkorc === 'AG' || vkorc === 'GA') return { verdict: 'caution', priority: 5, text: `Intermediate warfarin sensitivity (VKORC1 ${vkorc}). If on warfarin, be cautious with K2 supplementation as it affects clotting factor synthesis. If not on blood thinners, K2 is beneficial.` };
+          return { verdict: 'beneficial', priority: 3, text: `Normal VKORC1. K2 (MK-7) is excellent paired with vitamin D3 for directing calcium to bones instead of arteries. 100-200 mcg/day.` };
+        }
+      },
+      { snps: ['rs6025'], gene: 'F5',
+        assess: (all) => {
+          const fvl = all['rs6025'] || '';
+          if (fvl === 'CT' || fvl === 'TC' || fvl === 'TT') return { verdict: 'caution', priority: 6, text: `Factor V Leiden carrier (${fvl}). You already have increased clotting tendency. <strong>Vitamin K2 promotes clotting factor synthesis.</strong> This is not necessarily bad (K2 also prevents arterial calcification), but discuss with your hematologist, especially if on anticoagulants.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'SAMe (S-Adenosyl Methionine)',
+    aliases: ['same', 's-adenosyl methionine', 'sam-e', 'adenosyl methionine'],
+    category: 'Methylation',
+    genes: [
+      { snps: ['rs4680'], gene: 'COMT',
+        assess: (all) => {
+          const comt = all['rs4680'] || '';
+          if (comt === 'AA') return { verdict: 'caution', priority: 8, text: `Met/Met COMT (${comt}) means slow dopamine/norepinephrine clearance. <strong>SAMe is a major methyl donor that can overstimulate an already slow COMT system.</strong> It may cause anxiety, irritability, or insomnia in Met/Met individuals. If you need methylation support, use methylfolate + B12 instead. Avoid SAMe unless under clinical guidance.` };
+          if (comt === 'AG' || comt === 'GA') return { verdict: 'caution', priority: 5, text: `Val/Met COMT (${comt}). SAMe may be tolerable at low doses but monitor for overstimulation (anxiety, insomnia). Start low if using.` };
+          if (comt === 'GG') return { verdict: 'beneficial', priority: 5, text: `Val/Val COMT (${comt}). Fast dopamine clearance. SAMe is better tolerated by your genotype and can support mood and methylation. 200-400 mg/day.` };
+          return { verdict: 'neutral', priority: 1, text: `SAMe supports methylation and mood. Useful for liver health and joint support.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Green Tea Extract (EGCG)',
+    aliases: ['green tea', 'green tea extract', 'egcg', 'matcha extract', 'catechins'],
+    category: 'Antioxidants',
+    genes: [
+      { snps: ['rs4680'], gene: 'COMT',
+        assess: (all) => {
+          const comt = all['rs4680'] || '';
+          if (comt === 'AA') return { verdict: 'caution', priority: 6, text: `Met/Met COMT (${comt}). EGCG is a potent <strong>COMT inhibitor</strong>, meaning it further slows your already-slow dopamine clearance. This can cause anxiety, jitteriness, or overstimulation. <strong>Avoid concentrated EGCG supplements.</strong> A cup of green tea is fine; megadose extracts are not.` };
+          if (comt === 'GG') return { verdict: 'beneficial', priority: 5, text: `Val/Val COMT (${comt}). Your fast COMT activity means EGCG's COMT-inhibiting effect may actually help you retain dopamine longer, improving focus. Green tea extract is well-suited for your genotype.` };
+          return { verdict: 'neutral', priority: 2, text: `Val/Met COMT. EGCG has modest COMT inhibition. Moderate intake is fine; avoid very high doses.` };
+        }
+      },
+      { snps: ['rs762551'], gene: 'CYP1A2',
+        assess: (all) => {
+          const cyp = all['rs762551'] || '';
+          if (cyp === 'AC' || cyp === 'CA' || cyp === 'CC') return { verdict: 'caution', priority: 4, text: `Slow caffeine metabolizer (CYP1A2 ${cyp}). Green tea extract contains caffeine. Combined with the EGCG slowing caffeine metabolism further, <strong>avoid taking late in the day</strong>. Decaf green tea extract is an option.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Caffeine',
+    aliases: ['caffeine', 'caffeine pill', 'caffeine supplement'],
+    category: 'Performance',
+    genes: [
+      { snps: ['rs762551'], gene: 'CYP1A2',
+        assess: (all) => {
+          const cyp = all['rs762551'] || '';
+          if (cyp === 'AA') return { verdict: 'beneficial', priority: 5, text: `Fast caffeine metabolizer (CYP1A2 AA). You clear caffeine quickly. <strong>Caffeine supplementation is safe and effective for you</strong> as a performance enhancer. May even be cardiovascularly protective. 200-400 mg pre-workout is well tolerated.` };
+          if (cyp === 'AC' || cyp === 'CA' || cyp === 'CC') return { verdict: 'caution', priority: 7, text: `Slow caffeine metabolizer (CYP1A2 ${cyp}). Caffeine lingers in your system much longer. <strong>High-dose caffeine supplements increase your cardiovascular risk</strong> (3+ cups/day equivalent linked to heart attack risk in slow metabolizers). Keep to mornings only, moderate doses. No caffeine after 2pm.` };
+          return { verdict: 'neutral', priority: 2, text: `Caffeine metabolism: check CYP1A2 genotype for personalized guidance.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'L-Theanine',
+    aliases: ['l-theanine', 'theanine', 'l theanine'],
+    category: 'Nootropics',
+    genes: [
+      { snps: ['rs4680'], gene: 'COMT',
+        assess: (all) => {
+          const comt = all['rs4680'] || '';
+          if (comt === 'AA') return { verdict: 'recommended', priority: 7, text: `Met/Met COMT (${comt}): anxiety-prone under stress. <strong>L-theanine promotes alpha brain waves and boosts GABA without sedation.</strong> Ideal for your "Worrier" genotype. Smooths out caffeine jitters. 100-200 mg, can pair with coffee.` };
+          if (comt === 'AG' || comt === 'GA') return { verdict: 'beneficial', priority: 4, text: `Val/Met COMT. L-theanine supports calm focus. Good for pairing with caffeine.` };
+          return { verdict: 'beneficial', priority: 3, text: `Val/Val COMT. L-theanine is still a useful calming agent, though you naturally handle stress well.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Tyrosine',
+    aliases: ['tyrosine', 'l-tyrosine', 'n-acetyl tyrosine', 'nalt', 'l tyrosine'],
+    category: 'Nootropics',
+    genes: [
+      { snps: ['rs4680'], gene: 'COMT',
+        assess: (all) => {
+          const comt = all['rs4680'] || '';
+          if (comt === 'GG') return { verdict: 'recommended', priority: 7, text: `Val/Val COMT (${comt}): fast dopamine clearance, "Warrior" type. <strong>Tyrosine is the precursor to dopamine and norepinephrine.</strong> Your brain burns through catecholamines quickly, especially under stress. Tyrosine replenishes the supply. 500-2000 mg before demanding tasks.` };
+          if (comt === 'AA') return { verdict: 'caution', priority: 6, text: `Met/Met COMT (${comt}). You already have high prefrontal dopamine. <strong>Adding more dopamine precursor (tyrosine) can cause overstimulation, anxiety, or irritability.</strong> Generally not recommended for Met/Met unless under specific circumstances (sleep deprivation, extreme demand).` };
+          return { verdict: 'beneficial', priority: 4, text: `Val/Met COMT. Tyrosine can help under high-stress situations. Moderate use (500 mg) is reasonable.` };
+        }
+      },
+      { snps: ['rs1800497'], gene: 'DRD2',
+        assess: (all) => {
+          const drd2 = all['rs1800497'] || '';
+          if (drd2 === 'AG' || drd2 === 'GA' || drd2 === 'AA') return { verdict: 'beneficial', priority: 5, text: `Reduced D2 density (${drd2}). Tyrosine helps ensure adequate dopamine production for your fewer receptors, but be mindful of diminishing returns.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Lion\'s Mane',
+    aliases: ['lions mane', "lion's mane", 'hericium erinaceus', 'lion mane', 'lions mane mushroom'],
+    category: 'Nootropics',
+    genes: [
+      { snps: ['rs6265'], gene: 'BDNF',
+        assess: (all) => {
+          const bdnf = all['rs6265'] || '';
+          if (bdnf === 'TT') return { verdict: 'recommended', priority: 8, text: `Met/Met BDNF (${bdnf}): lowest BDNF secretion. <strong>Lion's Mane stimulates NGF (Nerve Growth Factor) production</strong>, which supports neuroplasticity through a different pathway than BDNF. This makes it especially valuable for compensating your reduced BDNF. 500-1000 mg twice daily.` };
+          if (bdnf === 'CT' || bdnf === 'TC') return { verdict: 'recommended', priority: 6, text: `Reduced BDNF (${bdnf}). Lion's Mane's NGF-stimulating effects can help compensate. Good for supporting cognitive function and neuroplasticity. 500-1000 mg/day.` };
+          return { verdict: 'beneficial', priority: 3, text: `Normal BDNF (${bdnf}). Lion's Mane supports general cognitive health through NGF stimulation.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Vitamin C',
+    aliases: ['vitamin c', 'ascorbic acid', 'ascorbate', 'vit c'],
+    category: 'Vitamins',
+    genes: [
+      { snps: ['rs1611115'], gene: 'DBH',
+        assess: (all) => {
+          const dbh = all['rs1611115'] || '';
+          if (dbh === 'TT') return { verdict: 'beneficial', priority: 5, text: `Lower DBH activity (${dbh}). Vitamin C is a cofactor for the DBH enzyme (converts dopamine to norepinephrine). <strong>Adequate vitamin C may partially support your lower DBH activity.</strong> 500-1000 mg/day.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal DBH. Vitamin C is broadly beneficial as an antioxidant; no special genetic interaction.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Zinc',
+    aliases: ['zinc', 'zinc picolinate', 'zinc glycinate', 'zinc citrate', 'zinc carnosine'],
+    category: 'Minerals',
+    genes: [
+      { snps: ['rs1800795'], gene: 'IL-6',
+        assess: (all) => {
+          const il6 = all['rs1800795'] || '';
+          if (il6 === 'GG') return { verdict: 'beneficial', priority: 5, text: `Higher IL-6 producer (${il6}). Zinc modulates NF-kB and helps regulate inflammatory cytokine production. A useful addition for your pro-inflammatory profile. 15-30 mg/day (balance with copper).` };
+          return { verdict: 'neutral', priority: 2, text: `Zinc is broadly important for immune function, testosterone, and wound healing. 15 mg/day as maintenance.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Astragalus',
+    aliases: ['astragalus', 'astragalus root', 'astragalus membranaceus', 'ta-65'],
+    category: 'Longevity',
+    genes: [
+      { snps: ['rs10936599'], gene: 'TERT',
+        assess: (all) => {
+          const tert = all['rs10936599'] || '';
+          if (tert === 'TT') return { verdict: 'recommended', priority: 7, text: `Shorter telomere genotype (TERT ${tert}). <strong>Astragalus contains cycloastragenol, which has been shown to activate telomerase in some studies.</strong> This is directly relevant to your shorter-telomere genetics. Combined with exercise, sleep, and stress management for telomere preservation.` };
+          if (tert === 'CT' || tert === 'TC') return { verdict: 'beneficial', priority: 4, text: `One shorter-telomere allele (TERT ${tert}). Astragalus may support telomere maintenance. Modest evidence but reasonable.` };
+          return { verdict: 'neutral', priority: 1, text: `Longer telomere genotype. Astragalus is an adaptogen with immune-supporting properties but telomere urgency is low.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Folic Acid',
+    aliases: ['folic acid', 'folacin', 'pteroylglutamic acid'],
+    category: 'B Vitamins',
+    genes: [
+      { snps: ['rs1801133', 'rs1801131'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          if (c677t === 'AA') return { verdict: 'avoid', priority: 9, text: `Homozygous MTHFR C677T (${c677t}). <strong>Avoid synthetic folic acid.</strong> Your enzyme converts it at only ~30% efficiency, causing unmetabolized folic acid (UMFA) to accumulate in your blood. UMFA may block folate receptors and has been associated with immune suppression and masking B12 deficiency. <strong>Use methylfolate (5-MTHF) instead.</strong>` };
+          if (c677t === 'AG' || c677t === 'GA') return { verdict: 'caution', priority: 6, text: `One MTHFR C677T copy (${c677t}). Your folic acid conversion is reduced to ~65%. Methylfolate is preferred, especially at higher doses. Low-dose folic acid from fortified foods is manageable.` };
+          return { verdict: 'neutral', priority: 0, text: `Normal MTHFR (${c677t}). You convert folic acid fine. Either form works.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Iron',
+    aliases: ['iron', 'iron supplement', 'ferrous', 'ferritin', 'iron bisglycinate'],
+    category: 'Minerals',
+    genes: [
+      { snps: ['rs1800562'], gene: 'HFE',
+        assess: (all) => {
+          const hfe = all['rs1800562'] || '';
+          if (hfe === 'AA') return { verdict: 'avoid', priority: 10, text: `Homozygous HFE C282Y (${hfe}). This is the primary hemochromatosis genotype. <strong>DO NOT supplement iron without checking ferritin levels.</strong> You may already absorb and store too much iron, which causes organ damage. Get serum ferritin tested regularly.` };
+          if (hfe === 'AG' || hfe === 'GA') return { verdict: 'caution', priority: 7, text: `HFE C282Y carrier (${hfe}). You may absorb iron more efficiently than average. <strong>Only supplement iron if blood tests confirm deficiency.</strong> Check ferritin before supplementing.` };
+          return { verdict: 'neutral', priority: 0, text: `No HFE variant detected. Standard iron supplementation guidelines apply. Only supplement if deficient (check ferritin).` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Glutathione',
+    aliases: ['glutathione', 'liposomal glutathione', 'gsh', 'l-glutathione', 'reduced glutathione'],
+    category: 'Antioxidants',
+    genes: [
+      { snps: ['rs1801133'], gene: 'MTHFR',
+        assess: (all) => {
+          const c677t = all['rs1801133'] || '';
+          if (c677t === 'AA' || c677t === 'AG' || c677t === 'GA') return { verdict: 'beneficial', priority: 6, text: `MTHFR variant (${c677t}). Impaired methylation reduces homocysteine-to-glutathione conversion. <strong>Direct glutathione supplementation (liposomal) or its precursor NAC can help bypass this bottleneck.</strong>` };
+          return { verdict: 'neutral', priority: 2, text: `Normal MTHFR. Glutathione is your body's master antioxidant. Liposomal forms are best absorbed, but your body produces it efficiently.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Berberine',
+    aliases: ['berberine', 'berberine hcl'],
+    category: 'Metabolic',
+    genes: [
+      { snps: ['rs7903146'], gene: 'TCF7L2',
+        assess: (all) => {
+          const tcf = all['rs7903146'] || '';
+          if (tcf === 'TT') return { verdict: 'recommended', priority: 8, text: `Homozygous T2D risk (TCF7L2 ${tcf}). <strong>Berberine activates AMPK and improves insulin sensitivity, rivaling metformin in some studies.</strong> Directly relevant to your elevated diabetes risk. 500 mg 2-3x/day with meals. Discuss with doctor if on diabetes medication.` };
+          if (tcf === 'CT' || tcf === 'TC') return { verdict: 'beneficial', priority: 5, text: `One T2D risk allele (TCF7L2 ${tcf}). Berberine supports blood sugar regulation. A reasonable preventive measure alongside diet and exercise.` };
+          return { verdict: 'neutral', priority: 1, text: `Low genetic T2D risk. Berberine is still a potent metabolic regulator but less genetically urgent for you.` };
+        }
+      },
+      { snps: ['rs9939609'], gene: 'FTO',
+        assess: (all) => {
+          const fto = all['rs9939609'] || '';
+          if (fto === 'AA') return { verdict: 'beneficial', priority: 5, text: `Homozygous FTO risk (${fto}). Berberine's AMPK activation improves fat metabolism and appetite regulation, helpful against FTO's hunger-signal effects.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Alpha-Lipoic Acid',
+    aliases: ['alpha lipoic acid', 'ala', 'r-lipoic acid', 'lipoic acid', 'r-ala'],
+    category: 'Antioxidants',
+    genes: [
+      { snps: ['rs7903146'], gene: 'TCF7L2',
+        assess: (all) => {
+          const tcf = all['rs7903146'] || '';
+          if (tcf === 'CT' || tcf === 'TC' || tcf === 'TT') return { verdict: 'beneficial', priority: 5, text: `T2D risk allele(s) (TCF7L2 ${tcf}). Alpha-lipoic acid improves insulin sensitivity and reduces oxidative stress. 300-600 mg/day supports glucose metabolism.` };
+          return { verdict: 'neutral', priority: 2, text: `ALA is a versatile antioxidant that supports both fat and water-soluble antioxidant systems. Helpful for general metabolic health.` };
+        }
+      }
+    ]
+  }
+];
+
+// ============================================================
+// SUPPLEMENT ANALYZER LOGIC
+// ============================================================
+function analyzeSupplementForUser(supp, snps) {
+  const results = [];
+  let bestVerdict = 'neutral';
+  let bestPriority = 0;
+  const verdictRank = { avoid: 5, recommended: 4, caution: 3, beneficial: 2, neutral: 1 };
+
+  for (const geneEntry of supp.genes) {
+    const assess = geneEntry.assess(snps);
+    if (!assess) continue;
+    results.push({ gene: geneEntry.gene, snps: geneEntry.snps, ...assess });
+    // avoid/caution always wins; then recommended; then beneficial
+    if (assess.verdict === 'avoid' || assess.verdict === 'caution') {
+      if (verdictRank[assess.verdict] > verdictRank[bestVerdict]) {
+        bestVerdict = assess.verdict;
+        bestPriority = assess.priority;
+      }
+    } else if (assess.priority > bestPriority || verdictRank[assess.verdict] > verdictRank[bestVerdict]) {
+      bestVerdict = assess.verdict;
+      bestPriority = assess.priority;
+    }
+  }
+
+  return { supplement: supp, results, verdict: bestVerdict, priority: bestPriority };
+}
+
+function getVerdictLabel(v) {
+  const labels = { recommended: 'Recommended for You', beneficial: 'Likely Beneficial', neutral: 'Neutral', caution: 'Use with Caution', avoid: 'Avoid / Not Recommended' };
+  return labels[v] || v;
+}
+
+function getVerdictClass(v) {
+  return 'verdict-' + v;
+}
+
+function renderSuppResult(analysis) {
+  const { supplement, results, verdict } = analysis;
+  let html = `<div class="supp-result-header"><div><div class="supp-result-name">${supplement.name}</div></div><div class="supp-result-cat">${supplement.category}</div></div>`;
+  html += `<div class="supp-verdict ${getVerdictClass(verdict)}">${getVerdictLabel(verdict)}</div>`;
+  html += '<div class="supp-gene-interactions">';
+  for (const r of results) {
+    const snpDisplay = r.snps.map(s => {
+      const g = window._currentSnps ? window._currentSnps[s] : '';
+      return g ? `${s}:${g}` : s;
+    }).join(', ');
+    html += `<div class="supp-gene-row"><div class="supp-gene-badge">${r.gene} (${snpDisplay})</div><div class="supp-gene-text">${r.text}</div></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderSupplementSection(snps) {
+  window._currentSnps = snps;
+
+  // Analyze all supplements
+  const analyses = SUPPLEMENT_DB.map(s => analyzeSupplementForUser(s, snps));
+
+  // Split into recommended and caution
+  const recommended = analyses
+    .filter(a => a.verdict === 'recommended' || (a.verdict === 'beneficial' && a.priority >= 5))
+    .sort((a, b) => b.priority - a.priority);
+
+  const caution = analyses
+    .filter(a => a.verdict === 'caution' || a.verdict === 'avoid')
+    .sort((a, b) => b.priority - a.priority);
+
+  // Render recommended grid
+  const recEl = document.getElementById('suppRecommended');
+  if (recommended.length > 0) {
+    recEl.innerHTML = recommended.map(a => {
+      const topResult = a.results.sort((x, y) => y.priority - x.priority)[0];
+      const genes = [...new Set(a.results.map(r => r.gene))];
+      const recClass = a.verdict === 'recommended' ? 'rec-high' : 'rec-moderate';
+      return `<div class="supp-card ${recClass}" onclick="showSuppDetail('${a.supplement.name.replace(/'/g, "\\'")}')">
+        <div class="supp-card-name">${a.supplement.name}</div>
+        <div class="supp-card-reason">${topResult ? topResult.text.replace(/<[^>]+>/g, '').slice(0, 120) + '...' : ''}</div>
+        <div class="supp-card-genes">${genes.map(g => `<span class="supp-card-gene">${g}</span>`).join('')}</div>
+      </div>`;
+    }).join('');
+  } else {
+    recEl.innerHTML = '<div class="supp-empty">No strongly recommended supplements based on your variants.</div>';
+  }
+
+  // Render caution grid
+  const cautEl = document.getElementById('suppCaution');
+  if (caution.length > 0) {
+    cautEl.innerHTML = caution.map(a => {
+      const topResult = a.results.sort((x, y) => y.priority - x.priority)[0];
+      const genes = [...new Set(a.results.map(r => r.gene))];
+      const recClass = a.verdict === 'avoid' ? 'rec-avoid' : 'rec-caution';
+      return `<div class="supp-card ${recClass}" onclick="showSuppDetail('${a.supplement.name.replace(/'/g, "\\'")}')">
+        <div class="supp-card-name">${a.supplement.name}</div>
+        <div class="supp-card-reason">${topResult ? topResult.text.replace(/<[^>]+>/g, '').slice(0, 120) + '...' : ''}</div>
+        <div class="supp-card-genes">${genes.map(g => `<span class="supp-card-gene">${g}</span>`).join('')}</div>
+      </div>`;
+    }).join('');
+  } else {
+    cautEl.innerHTML = '<div class="supp-empty">No supplements flagged for caution based on your variants.</div>';
+  }
+
+  // Set up search
+  const searchInput = document.getElementById('suppSearch');
+  const autocomplete = document.getElementById('suppAutocomplete');
+  const resultEl = document.getElementById('suppResult');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (q.length < 2) { autocomplete.classList.remove('visible'); return; }
+
+    const matches = SUPPLEMENT_DB.filter(s =>
+      s.name.toLowerCase().includes(q) || s.aliases.some(a => a.includes(q))
+    ).slice(0, 8);
+
+    if (matches.length === 0) { autocomplete.classList.remove('visible'); return; }
+
+    autocomplete.innerHTML = matches.map(s =>
+      `<div class="supp-ac-item" data-name="${s.name}"><span class="ac-name">${s.name}</span><span class="ac-cat">${s.category}</span></div>`
+    ).join('');
+    autocomplete.classList.add('visible');
+
+    autocomplete.querySelectorAll('.supp-ac-item').forEach(item => {
+      item.addEventListener('click', () => {
+        showSuppDetail(item.dataset.name);
+        searchInput.value = item.dataset.name;
+        autocomplete.classList.remove('visible');
+      });
+    });
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const q = searchInput.value.trim().toLowerCase();
+      const match = SUPPLEMENT_DB.find(s =>
+        s.name.toLowerCase() === q || s.aliases.some(a => a === q)
+      ) || SUPPLEMENT_DB.find(s =>
+        s.name.toLowerCase().includes(q) || s.aliases.some(a => a.includes(q))
+      );
+      if (match) {
+        showSuppDetail(match.name);
+        autocomplete.classList.remove('visible');
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.supp-search-wrap')) autocomplete.classList.remove('visible');
+  });
+}
+
+function showSuppDetail(name) {
+  const supp = SUPPLEMENT_DB.find(s => s.name === name);
+  if (!supp || !window._currentSnps) return;
+  const analysis = analyzeSupplementForUser(supp, window._currentSnps);
+  const resultEl = document.getElementById('suppResult');
+  resultEl.innerHTML = renderSuppResult(analysis);
+  resultEl.classList.add('visible');
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ============================================================
 // FILE UPLOAD HANDLING
 // ============================================================
 const dropZone = document.getElementById('dropZone');
@@ -1602,7 +2583,7 @@ function handleFile(file) {
         const neededIds = new Set();
         SNP_DB.forEach(s => { neededIds.add(s.id); if (s.multi) s.multi.forEach(m => neededIds.add(m)); });
         // Also store some extras used in charts/summaries
-        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131'].forEach(id => neededIds.add(id));
+        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131','rs601338','rs1800629','rs671','rs4988235','rs762551','rs9923231','rs1815739','rs1801260','rs10936599','rs2187668','rs1800562'].forEach(id => neededIds.add(id));
         for (const id of neededIds) {
           if (data.snps[id]) cacheData.snps[id] = data.snps[id];
         }
