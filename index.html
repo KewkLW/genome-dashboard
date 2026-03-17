@@ -611,7 +611,7 @@
 
 <!-- DASHBOARD (populated dynamically) -->
 <div id="dashboard">
-  <button class="new-file-btn" onclick="location.reload()">&#x21BB; Load New File</button>
+  <button class="new-file-btn" onclick="clearCacheAndReload()">&#x21BB; Load New File</button>
 
   <div class="hero">
     <canvas id="helixCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.2;"></canvas>
@@ -1371,6 +1371,8 @@ dropZone.addEventListener('drop', e => {
 });
 fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
+const CACHE_KEY = 'genome_dashboard_data';
+
 function handleFile(file) {
   document.getElementById('upload-screen').style.display = 'none';
   document.getElementById('loading-screen').style.display = 'flex';
@@ -1378,9 +1380,22 @@ function handleFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('loading-status').textContent = 'Analyzing variants...';
-    // Use setTimeout to allow UI update
     setTimeout(() => {
       const data = parseGenomeFile(e.target.result);
+      // Cache the parsed data (only the SNPs we care about + chr counts, not the full file)
+      try {
+        const cacheData = { snps: {}, chrCounts: data.chrCounts, totalSNPs: data.totalSNPs, format: data.format, cachedAt: new Date().toISOString() };
+        // Store only the SNPs from our database + a few extras for charts, keep cache small
+        const neededIds = new Set();
+        SNP_DB.forEach(s => { neededIds.add(s.id); if (s.multi) s.multi.forEach(m => neededIds.add(m)); });
+        // Also store some extras used in charts/summaries
+        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131'].forEach(id => neededIds.add(id));
+        for (const id of neededIds) {
+          if (data.snps[id]) cacheData.snps[id] = data.snps[id];
+        }
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      } catch (e) { /* localStorage full or unavailable, no problem */ }
+
       document.getElementById('loading-status').textContent = `Found ${data.totalSNPs.toLocaleString()} SNPs. Rendering dashboard...`;
       setTimeout(() => {
         document.getElementById('loading-screen').style.display = 'none';
@@ -1391,6 +1406,27 @@ function handleFile(file) {
   };
   reader.readAsText(file);
 }
+
+function clearCacheAndReload() {
+  localStorage.removeItem(CACHE_KEY);
+  location.reload();
+}
+
+// On page load, check for cached data
+(function checkCache() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (data && data.snps && data.totalSNPs > 0) {
+        document.getElementById('upload-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        renderDashboard(data);
+        return;
+      }
+    }
+  } catch (e) { /* cache corrupt, show upload screen */ }
+})();
 </script>
 
 </body>
