@@ -326,11 +326,142 @@
     border-radius: 12px;
     padding: 16px;
     text-align: center;
+    position: relative;
+    cursor: help;
+    transition: all 0.2s;
+  }
+
+  .summary-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
   }
 
   .summary-item .emoji { font-size: 1.5rem; margin-bottom: 6px; }
   .summary-item .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
   .summary-item .value { font-size: 1rem; font-weight: 700; margin-top: 4px; }
+
+  .summary-item .info-tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.5;
+    width: 300px;
+    text-align: left;
+    z-index: 20;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    pointer-events: none;
+  }
+
+  .summary-item .info-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border);
+  }
+
+  .summary-item:hover .info-tip { display: block; }
+
+  /* Info panels for sections */
+  .info-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .info-panel summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.9rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-panel summary::before {
+    content: '\u24D8';
+    color: var(--accent);
+    font-size: 1rem;
+  }
+
+  .info-panel summary::after {
+    content: '\u25BC';
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-left: auto;
+    transition: transform 0.2s;
+  }
+
+  .info-panel[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  .info-panel .panel-body {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .info-panel .panel-body p { margin-bottom: 8px; }
+  .info-panel .panel-body p:last-child { margin-bottom: 0; }
+  .info-panel strong { color: var(--text); }
+
+  .neuro-legend {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .neuro-legend-item {
+    display: flex;
+    gap: 10px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .neuro-legend-item .nl-name {
+    font-weight: 600;
+    color: var(--text);
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+
+  .neuro-legend-item .nl-desc { color: var(--text-dim); }
+
+  .risk-legend {
+    margin-top: 16px;
+  }
+
+  .risk-legend-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .risk-legend-item:last-child { border-bottom: none; }
+  .risk-legend-item .rl-name { font-weight: 600; color: var(--text); }
+  .risk-legend-item .rl-what { color: var(--text-dim); margin-top: 2px; }
+  .risk-legend-item .rl-signs { color: var(--yellow); margin-top: 2px; }
+  .risk-legend-item .rl-prevent { color: var(--green); margin-top: 2px; }
 
   /* Tabs */
   .tabs {
@@ -626,16 +757,40 @@
     <div class="karyogram">
       <div class="karyogram-title">Chromosome Coverage Map &mdash; SNP Density</div>
       <div class="chromosomes" id="karyogram"></div>
+      <details class="info-panel" style="margin-top:16px;border:none;padding:12px 0 0;">
+        <summary>What is SNP density and why does it matter?</summary>
+        <div class="panel-body">
+          <p><strong>SNPs (Single Nucleotide Polymorphisms)</strong> are individual DNA letter variations at specific positions in your genome. Your 23andMe chip reads hundreds of thousands of these positions and reports which letters you have at each one.</p>
+          <p><strong>SNP density</strong> (SNPs per megabase) tells you how thoroughly each chromosome was sampled. Higher density means more data points on that chromosome. This is driven by chip design: some chromosomes have more medically or scientifically interesting regions, so the chip includes more probes there.</p>
+          <p><strong>How to read this chart:</strong> Taller bars = more SNPs tested on that chromosome. Hover any bar to see the exact count and density. Chromosome 19, despite being small, has high density because it contains many disease-relevant genes (including APOE). The Y chromosome and mitochondrial DNA (MT) have fewer probes because they are smaller and inherited differently.</p>
+          <p><strong>Practical use:</strong> If a health condition is linked to a specific chromosome, you can see how well that chromosome was covered. Low coverage means potentially missed variants. This chart is a confidence indicator for your results.</p>
+        </div>
+      </details>
     </div>
 
     <div class="chart-row">
       <div class="chart-card">
         <h3>Neurotransmitter Profile</h3>
         <div class="radar-wrap"><canvas id="neuroRadar"></canvas></div>
+        <details class="info-panel" style="border:none;padding:8px 0 0;">
+          <summary>How to read this chart</summary>
+          <div class="panel-body">
+            <p>Each axis represents a neurotransmitter system scored 1-10. <strong>Higher = more activity/capacity</strong> in that system. The purple shape is your genetic profile; the dashed line is the estimated population average.</p>
+            <p>This chart is a <strong>simplification</strong>. Each axis is based on one or two SNPs, but these systems involve hundreds of genes. Think of it as a rough genetic tendency, not a diagnosis.</p>
+            <div class="neuro-legend" id="neuroLegend"></div>
+          </div>
+        </details>
       </div>
       <div class="chart-card">
         <h3>Risk Overview</h3>
         <canvas id="riskChart"></canvas>
+        <details class="info-panel" style="border:none;padding:8px 0 0;">
+          <summary>What each risk means and how to act on it</summary>
+          <div class="panel-body">
+            <p>Bars show <strong>relative genetic risk</strong> on a 1-10 scale. <span style="color:var(--green)">Green (1-3)</span> = low/average, <span style="color:var(--yellow)">Yellow (4-6)</span> = mildly elevated, <span style="color:var(--red)">Red (7-10)</span> = notably elevated. These are genetic predispositions only; lifestyle, environment, and other genes play major roles.</p>
+            <div class="risk-legend" id="riskLegend"></div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -662,7 +817,7 @@ const SNP_DB = [
       if (g === 'AA') return { tag: 'Blue Eyes', tagClass: 'tag-info', detail: 'AA at HERC2 strongly predicts blue eyes. This is the derived European variant.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F441}', label: 'Eye Color', value: g === 'GG' ? 'Brown' : g === 'AA' ? 'Blue' : 'Green/Hazel' })
+    summary: g => ({ emoji: '\u{1F441}', label: 'Eye Color', value: g === 'GG' ? 'Brown' : g === 'AA' ? 'Blue' : 'Green/Hazel', tip: 'Determined primarily by the HERC2 gene, which controls the OCA2 pigment gene. GG = brown (most melanin in iris), AA = blue (least melanin), AG = green/hazel. Eye color is ~75% heritable and involves 16+ genes, but this single SNP is the strongest predictor.' })
   },
   {
     id: 'rs1426654', gene: 'SLC24A5', title: 'Skin Pigmentation', category: 'identity', color: 'purple',
@@ -672,7 +827,7 @@ const SNP_DB = [
       if (g === 'GG') return { tag: 'Ancestral', tagClass: 'tag-info', detail: 'GG is the ancestral allele, associated with darker pigmentation.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F9AC}', label: 'Skin', value: g === 'AA' ? 'European Pigmentation' : g === 'GG' ? 'Ancestral Pigmentation' : 'Intermediate' })
+    summary: g => ({ emoji: '\u{1F9AC}', label: 'Skin', value: g === 'AA' ? 'European Pigmentation' : g === 'GG' ? 'Ancestral Pigmentation' : 'Intermediate', tip: 'SLC24A5 is the single most impactful skin pigmentation gene. It controls calcium transport in melanocytes, which produce melanin (skin pigment). The AA variant reduces melanin production and is found in nearly all Europeans. This one SNP explains ~25-38% of the skin color difference between European and African populations.' })
   },
   {
     id: 'rs8176719', gene: 'ABO', title: 'Blood Type', category: 'identity', color: 'green',
@@ -692,7 +847,7 @@ const SNP_DB = [
       const r719 = all['rs8176719'] || '--';
       let t = '?';
       if (r719 === 'DD' || r719 === '--') t = 'O';
-      return { emoji: '\u{1F9EC}', label: 'Blood Type', value: `Type ${t}` };
+      return { emoji: '\u{1F9EC}', label: 'Blood Type', value: `Type ${t}`, tip: 'Your ABO blood type is determined by which sugar molecules sit on your red blood cells. Type A has A-antigens, Type B has B-antigens, AB has both, and O has neither. Type O is the "universal donor" for red blood cells. Blood type affects transfusion compatibility, organ transplant matching, and has weak associations with heart disease risk (O is slightly protective) and susceptibility to certain infections (O is more susceptible to cholera but more resistant to severe malaria).' };
     }
   },
   {
@@ -703,7 +858,7 @@ const SNP_DB = [
       if (g === 'TT') return { tag: 'Dry Earwax', tagClass: 'tag-info', detail: 'TT = dry, flaky earwax. Nearly universal in East Asians. Also means reduced body odor and apocrine sweat.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F4A7}', label: 'Earwax', value: g === 'TT' ? 'Dry Type' : 'Wet Type' })
+    summary: g => ({ emoji: '\u{1F4A7}', label: 'Earwax', value: g === 'TT' ? 'Dry Type' : 'Wet Type', tip: 'The ABCC11 gene controls a transporter in your apocrine glands. The same variant that determines earwax type (wet vs dry) also controls body odor and armpit sweat composition. Wet earwax (CC/CT) = you produce the precursor compounds that skin bacteria convert into body odor. Dry earwax (TT) = you produce almost none, and likely do not need deodorant. This is why deodorant was not historically marketed in East Asia, where TT is nearly universal.' })
   },
   {
     id: 'rs72921001', gene: 'OR6A2', title: 'Cilantro / Soap Taste', category: 'identity', color: 'green',
@@ -713,7 +868,7 @@ const SNP_DB = [
       if (g === 'TT') return { tag: 'Likely Tastes Soapy', tagClass: 'tag-risk', detail: 'TT = both copies of the variant. You very likely perceive cilantro as tasting like soap.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F33F}', label: 'Cilantro', value: g === 'CC' ? 'Tastes Normal' : g === 'TT' ? 'Tastes Soapy' : 'May Taste Soapy' })
+    summary: g => ({ emoji: '\u{1F33F}', label: 'Cilantro', value: g === 'CC' ? 'Tastes Normal' : g === 'TT' ? 'Tastes Soapy' : 'May Taste Soapy', tip: 'Cilantro contains aldehyde compounds. The OR6A2 olfactory receptor detects these aldehydes, and a variant in this gene makes some people hypersensitive to them, causing cilantro to taste like soap or stink bugs. About 4-14% of people with European ancestry have this perception. Interestingly, repeated exposure to cilantro can sometimes reduce the soapy taste over time as your brain learns to contextualize the flavor.' })
   },
   {
     id: 'rs713598', gene: 'TAS2R38', title: 'Bitter Taste Perception', category: 'identity', color: 'yellow',
@@ -733,7 +888,7 @@ const SNP_DB = [
       const snps = ['rs713598', 'rs1726866', 'rs10246939'].map(s => all[s] || '??');
       const nonTasterAlleles = [(all['rs713598']||'').includes('G') && !(all['rs713598']||'').includes('C'), (all['rs1726866']||'').includes('G') && !(all['rs1726866']||'').includes('A'), (all['rs10246939']||'').includes('C') && !(all['rs10246939']||'').includes('T')];
       const allNon = nonTasterAlleles.every(Boolean);
-      return { emoji: '\u{1F445}', label: 'Bitter Taste', value: allNon ? 'Non-Taster' : 'Taster' };
+      return { emoji: '\u{1F445}', label: 'Bitter Taste', value: allNon ? 'Non-Taster' : 'Taster', tip: 'TAS2R38 is a bitter taste receptor on your tongue. Three SNPs form two main haplotypes: PAV (taster) and AVI (non-taster). Supertasters (PAV/PAV) perceive intense bitterness in cruciferous vegetables (broccoli, Brussels sprouts), coffee, beer, and grapefruit. Non-tasters (AVI/AVI) barely notice it. This was discovered in 1931 when a chemist synthesized PTC powder and his lab mate across the room complained about the bitter taste, while the chemist tasted nothing.' };
     }
   },
   {
@@ -744,7 +899,7 @@ const SNP_DB = [
       if (g === 'TT') return { tag: 'High Freckling', tagClass: 'tag-notable', detail: 'TT: two copies. Strong tendency for freckling and sun sensitivity.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{2600}', label: 'Freckling', value: (g === 'CT' || g === 'TC' || g === 'TT') ? 'Increased Tendency' : 'Lower Tendency' })
+    summary: g => ({ emoji: '\u{2600}', label: 'Freckling', value: (g === 'CT' || g === 'TC' || g === 'TT') ? 'Increased Tendency' : 'Lower Tendency', tip: 'IRF4 (Interferon Regulatory Factor 4) regulates melanocyte development and pigment production. The T allele at this position causes uneven melanin distribution in the skin when exposed to UV light, producing freckles. It also correlates with sun sensitivity and a slightly increased risk of skin cancers. If you carry the T allele, sunscreen is especially important.' })
   },
   {
     id: 'rs3827760', gene: 'EDAR', title: 'Hair Thickness', category: 'identity', color: 'blue',
@@ -765,7 +920,7 @@ const SNP_DB = [
       if (g === 'AA') return { tag: 'Met/Met \u2014 Worrier', tagClass: 'tag-notable', detail: 'AA (Met/Met): low COMT activity, higher prefrontal dopamine. Better working memory and attention to detail in calm settings, but more stress-sensitive. The "Worrier" genotype.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F9E0}', label: 'COMT', value: g === 'GG' ? 'Warrior (Val/Val)' : g === 'AA' ? 'Worrier (Met/Met)' : 'Balanced (Val/Met)' })
+    summary: g => ({ emoji: '\u{1F9E0}', label: 'COMT', value: g === 'GG' ? 'Warrior (Val/Val)' : g === 'AA' ? 'Worrier (Met/Met)' : 'Balanced (Val/Met)', tip: 'COMT (Catechol-O-Methyltransferase) is the enzyme that breaks down dopamine, norepinephrine, and epinephrine in your prefrontal cortex. "Warriors" (Val/Val) clear dopamine fast, performing well under pressure but with less working memory in calm settings. "Worriers" (Met/Met) clear it slowly, giving them sharp focus and memory in low-stress conditions but vulnerability to anxiety under pressure. Val/Met heterozygotes get a balance of both modes. This affects how you handle deadlines, competition, and cognitively demanding tasks.' })
   },
   {
     id: 'rs6265', gene: 'BDNF', title: 'BDNF \u2014 Brain Plasticity', category: 'neuro', color: 'green',
@@ -896,7 +1051,7 @@ const SNP_DB = [
       if (g === 'GG' || g === 'CC') return { tag: 'Lactose Intolerant', tagClass: 'tag-carrier', detail: 'No persistence allele. Lactase production likely declines in adulthood. Consider lactase supplements with dairy.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F9C0}', label: 'Lactose', value: (g === 'GG' || g === 'CC') ? 'Intolerant' : 'Tolerant' })
+    summary: g => ({ emoji: '\u{1F9C0}', label: 'Lactose', value: (g === 'GG' || g === 'CC') ? 'Intolerant' : 'Tolerant', tip: 'All human babies produce lactase (the enzyme that digests milk sugar). In most of the world, this enzyme shuts off after weaning. About 7,500 years ago, a mutation near the LCT gene evolved in Northern European pastoral populations that keeps lactase active into adulthood. If you are "persistent," you digest dairy fine. If "non-persistent," undigested lactose ferments in your gut causing bloating, gas, and diarrhea. Lactase pills or lactose-free dairy can help.' })
   },
   {
     id: 'rs762551', gene: 'CYP1A2', title: 'Caffeine Metabolism', category: 'nutrition', color: 'yellow',
@@ -906,7 +1061,7 @@ const SNP_DB = [
       if (g === 'CC') return { tag: 'Slow Metabolizer', tagClass: 'tag-carrier', detail: 'CC: slow caffeine metabolism. Only AA homozygotes are fast metabolizers.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{2615}', label: 'Caffeine', value: g === 'AA' ? 'Fast Metabolizer' : 'Slow Metabolizer' })
+    summary: g => ({ emoji: '\u{2615}', label: 'Caffeine', value: g === 'AA' ? 'Fast Metabolizer' : 'Slow Metabolizer', tip: 'CYP1A2 is the liver enzyme responsible for breaking down ~95% of caffeine. Fast metabolizers (AA) clear caffeine in about 4 hours; slow metabolizers (AC/CC) take much longer, meaning caffeine stays in your bloodstream at higher concentrations for longer. For slow metabolizers, 3+ cups of coffee per day has been linked to increased risk of heart attack, hypertension, and poor sleep quality. Fast metabolizers show no such risk and may even get cardiovascular benefit from coffee. If you are slow, keep caffeine to mornings only.' })
   },
   {
     id: 'rs671', gene: 'ALDH2', title: 'Alcohol Flush', category: 'nutrition', color: 'green',
@@ -916,7 +1071,7 @@ const SNP_DB = [
       if (g === 'AA') return { tag: 'Extreme Intolerance', tagClass: 'tag-risk', detail: 'AA: virtually no ALDH2 activity. Extreme alcohol intolerance. Very high esophageal cancer risk from any drinking.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F377}', label: 'Alcohol Flush', value: g === 'GG' ? 'No Flush' : 'Flush Reaction' })
+    summary: g => ({ emoji: '\u{1F377}', label: 'Alcohol Flush', value: g === 'GG' ? 'No Flush' : 'Flush Reaction', tip: 'ALDH2 is the enzyme that breaks down acetaldehyde, the toxic byproduct of alcohol metabolism. If ALDH2 is deficient (AG or AA), acetaldehyde accumulates, causing facial flushing, nausea, rapid heartbeat, and headache after even small amounts of alcohol. More critically, acetaldehyde is a carcinogen. People with AG who drink regularly have a 6-10x increased risk of esophageal cancer. This variant is carried by ~30-40% of East Asians and is virtually absent in Europeans and Africans.' })
   },
 
   // ---- ATHLETIC ----
@@ -928,7 +1083,7 @@ const SNP_DB = [
       if (g === 'TT') return { tag: 'X/X \u2014 Endurance', tagClass: 'tag-notable', detail: 'TT (XX): no alpha-actinin-3. Associated with endurance performance. ~1 billion people worldwide are XX. The most common functional gene "knockout" in healthy humans.' };
       return null;
     },
-    summary: g => ({ emoji: '\u{1F3CB}', label: 'Muscle Type', value: g === 'CC' ? 'Power' : g === 'TT' ? 'Endurance' : 'Mixed Power/Endurance' })
+    summary: g => ({ emoji: '\u{1F3CB}', label: 'Muscle Type', value: g === 'CC' ? 'Power' : g === 'TT' ? 'Endurance' : 'Mixed Power/Endurance', tip: 'ACTN3 produces alpha-actinin-3, a structural protein found exclusively in fast-twitch (Type II) muscle fibers, the ones used for sprinting, jumping, and explosive power. The CC genotype produces full protein, favoring power/sprint performance. The TT genotype produces none, and those fibers shift toward slow-twitch characteristics better suited for endurance. CT is a mix. Every Olympic 100m sprint finalist ever genotyped had at least one C allele, but ~1 billion people worldwide are TT and live perfectly normal lives. Training matters far more than this gene.' })
   },
 
   // ---- PHARMACOGENOMICS ----
@@ -1154,7 +1309,7 @@ function renderDashboard(data) {
     const g = snps[def.id];
     if (!g) continue;
     const s = def.summary(g, snps);
-    if (s) summaryHTML += `<div class="summary-item"><div class="emoji">${s.emoji}</div><div class="label">${s.label}</div><div class="value">${s.value}</div></div>`;
+    if (s) summaryHTML += `<div class="summary-item"><div class="emoji">${s.emoji}</div><div class="label">${s.label}</div><div class="value">${s.value}</div>${s.tip ? `<div class="info-tip">${s.tip}</div>` : ''}</div>`;
   }
   document.getElementById('summaryGrid').innerHTML = summaryHTML;
 
@@ -1248,6 +1403,20 @@ function renderCharts(snps) {
   const serotonin = snps['rs6311'] || '';
   const serScore = (serotonin === 'CT' || serotonin === 'TC') ? 5 : serotonin === 'CC' ? 7 : 4;
 
+  // Populate neurotransmitter legend
+  const neuroLegendEl = document.getElementById('neuroLegend');
+  if (neuroLegendEl) {
+    neuroLegendEl.innerHTML = [
+      { name: 'Dopamine Clearance', desc: `<strong>Score: ${dopClearance}/10.</strong> How fast your prefrontal cortex clears dopamine (COMT enzyme). High = fast clearance ("Warrior"), good under acute stress, fewer ruminating thoughts, but less sustained focus. Low = slow clearance ("Worrier"), sharper working memory and detail-oriented thinking in calm settings, but more anxiety-prone under pressure. Moderate = balanced adaptability.` },
+      { name: 'Serotonin Signaling', desc: `<strong>Score: ${serScore}/10.</strong> How your serotonin 2A receptors (HTR2A) function. Serotonin regulates mood, sleep, appetite, and impulse control. Higher = more receptor expression, generally associated with better mood stability. Lower = reduced signaling, associated with higher anxiety and depression susceptibility. SSRIs work by increasing serotonin availability.` },
+      { name: 'Norepinephrine Synthesis', desc: `<strong>Score: ${dbhScore}/10.</strong> How efficiently you convert dopamine into norepinephrine via DBH (dopamine beta-hydroxylase). Higher = more norepinephrine, better sustained attention and stress vigilance. Lower = less conversion, which can mean more dopamine stays unconverted (potentially more creative/novelty-seeking but less focused under stress).` },
+      { name: 'BDNF Plasticity', desc: `<strong>Score: ${bdnfScore}/10.</strong> Brain-Derived Neurotrophic Factor supports the growth and survival of neurons. It is the brain's "fertilizer." Higher = better activity-dependent BDNF release, stronger synaptic plasticity, better learning and memory. Lower = reduced hippocampal volume and episodic memory. Exercise is the single best way to increase BDNF regardless of genotype.` },
+      { name: 'Opioid Sensitivity', desc: `<strong>Score: ${oprmScore}/10.</strong> How your mu-opioid receptor (OPRM1) binds endorphins and opioid drugs. Average (5) = normal baseline. Higher = the Asp variant, associated with altered pain thresholds, increased reward from alcohol, and different response to opioid medications. This affects both natural pain relief (runner's high, social bonding) and how you respond to painkillers.` },
+      { name: 'Oxytocin Sensitivity', desc: `<strong>Score: ${oxtrScore}/10.</strong> How responsive your oxytocin receptor (OXTR) is. Higher = more empathetic, socially attuned, better at reading emotions, stronger pair-bonding instincts. Lower = more emotionally independent, less reactive to social approval/rejection. Neither is better; they represent different social strategies. Effect sizes are modest.` },
+      { name: 'D2 Receptor Density', desc: `<strong>Score: ${drd2Score}/10.</strong> How many dopamine D2 receptors you have in the striatum (reward center). Higher = normal density, balanced reward sensitivity. Lower = fewer receptors, meaning you need more stimulation to feel rewarded, associated with novelty-seeking, risk-taking, and vulnerability to addiction. Higher density is generally protective against compulsive behaviors.` }
+    ].map(i => `<div class="neuro-legend-item"><div class="nl-name">${i.name}</div><div class="nl-desc">${i.desc}</div></div>`).join('');
+  }
+
   new Chart(document.getElementById('neuroRadar'), {
     type: 'radar',
     data: {
@@ -1310,6 +1479,50 @@ function renderCharts(snps) {
       plugins: { legend: { display: false } }
     }
   });
+
+  // Populate risk legend
+  const riskLegendEl = document.getElementById('riskLegend');
+  if (riskLegendEl) {
+    riskLegendEl.innerHTML = [
+      { name: "Alzheimer's (APOE)", score: apoeRisk,
+        what: "APOE controls cholesterol transport in the brain. The \u03B54 allele impairs amyloid-beta clearance, leading to plaque buildup. \u03B54/\u03B54 carriers have 12-15x increased risk; \u03B53/\u03B54 is ~3x. \u03B53/\u03B53 is population average. \u03B52 is protective.",
+        signs: "Memory loss, confusion, difficulty with familiar tasks, personality changes. Typically manifests after age 65.",
+        prevent: "Regular aerobic exercise (strongest evidence), Mediterranean diet, adequate sleep (7-8h, especially deep sleep for glymphatic clearance), cognitive engagement, social connection, managing cardiovascular risk factors (hypertension, diabetes, obesity). DHA omega-3 may be protective. Avoid excessive alcohol and head injuries." },
+      { name: "Type 2 Diabetes (TCF7L2)", score: t2dRisk,
+        what: "TCF7L2 is the strongest common genetic risk factor for T2D. The risk allele impairs insulin secretion from pancreatic beta cells and disrupts incretin signaling (GLP-1 pathway). One copy = ~1.4x risk, two copies = ~2x risk.",
+        signs: "Increased thirst, frequent urination, unexplained weight loss, fatigue, blurred vision, slow-healing wounds. Often silent for years; HbA1c testing catches it early.",
+        prevent: "Regular exercise (both aerobic and resistance training), maintain healthy weight, high-fiber diet, limit refined carbs and sugary drinks, adequate sleep. Even 30 minutes of daily walking reduces risk by ~30%. If you carry risk alleles, periodic fasting glucose and HbA1c checks are worthwhile." },
+      { name: "Obesity (FTO)", score: ftoRisk,
+        what: "FTO affects appetite regulation and energy expenditure via hypothalamic signaling. Each risk allele (A) adds ~1.5 kg on average and increases hunger/satiety imbalance. People with AA need ~25% more exercise to achieve the same weight-management benefits as TT.",
+        signs: "Higher baseline appetite, tendency to overeat, preference for calorie-dense foods. The gene affects hunger signals, not willpower.",
+        prevent: "Regular physical activity (exercise is especially effective at counteracting FTO), protein-rich meals for satiety, mindful eating, adequate sleep (poor sleep amplifies FTO's appetite effects). The good news: exercise nearly eliminates FTO's effect in active individuals." },
+      { name: "Clotting (Factor V Leiden)", score: fvlRisk,
+        what: "Factor V Leiden is a mutation in clotting Factor V that makes it resistant to being turned off by Protein C. This means your blood is more likely to form inappropriate clots (deep vein thrombosis, pulmonary embolism). Heterozygous = 5-7x risk, homozygous = ~80x risk.",
+        signs: "Leg swelling/pain (DVT), sudden shortness of breath (pulmonary embolism), unexplained clots, especially during immobility, surgery, pregnancy, or estrogen use.",
+        prevent: "Stay active on long flights/car rides, avoid prolonged immobility, stay hydrated. Carriers should inform doctors before surgery, pregnancy, or starting hormonal contraceptives (estrogen significantly compounds the risk). Compression stockings during travel. No smoking (compounds risk further)." },
+      { name: "BRCA (Cancer)", score: 1,
+        what: "BRCA1 and BRCA2 are tumor suppressor genes involved in DNA repair. Pathogenic mutations dramatically increase lifetime risk of breast (60-80%) and ovarian (20-40%) cancer. 23andMe only tests 3 specific Ashkenazi Jewish founder mutations, so a negative result does not rule out all BRCA mutations.",
+        signs: "Family history of early-onset breast/ovarian cancer, bilateral breast cancer, male breast cancer, or multiple cancers in close relatives.",
+        prevent: "If positive: enhanced screening (MRI + mammography from age 25), risk-reducing medications, or preventive surgery. If negative on 23andMe but strong family history: get full BRCA sequencing through a genetic counselor. For everyone: maintain healthy weight, limit alcohol, exercise regularly." },
+      { name: "Blood Pressure", score: 2,
+        what: "Multiple genes affect blood pressure, including AGT (angiotensinogen), AT1R (angiotensin receptor), and ADD1 (salt sensitivity). Your genetic variants at these loci determine your baseline predisposition.",
+        signs: "Usually silent until damage occurs (hence 'the silent killer'). Headaches, nosebleeds, and shortness of breath only at very high levels. Get it measured regularly.",
+        prevent: "Limit sodium intake (especially if salt-sensitive), regular exercise, maintain healthy weight, DASH diet, manage stress, limit alcohol, adequate potassium/magnesium intake. Home monitoring is cheap and effective for tracking trends." },
+      { name: "Statin Myopathy (SLCO1B1)", score: statinRisk,
+        what: "SLCO1B1 encodes a transporter that moves statins from your bloodstream into your liver (where they work). The C allele reduces this transport, causing statins to accumulate in blood and muscle tissue. CT = 4.5x myopathy risk with simvastatin, CC = 16.9x risk.",
+        signs: "Muscle pain, weakness, tenderness, or cramps after starting a statin (especially simvastatin at high doses). Rarely, severe rhabdomyolysis (muscle breakdown).",
+        prevent: "If you carry a C allele: inform your doctor, who may choose rosuvastatin or pravastatin (less affected by SLCO1B1), use lower doses, or monitor CK levels. CoQ10 supplementation may help with muscle symptoms. This is one of the most actionable pharmacogenomic results." },
+      { name: "Inflammation (IL-6 / IL-10)", score: inflRisk,
+        what: "IL-6 is a pro-inflammatory cytokine; IL-10 is anti-inflammatory. Your genetic combination determines your baseline inflammatory tendency. High IL-6 + low IL-10 = a pro-inflammatory profile that may increase risk of cardiovascular disease, autoimmune conditions, and slower recovery from injury.",
+        signs: "Chronic low-grade inflammation often has no obvious symptoms but shows up as elevated CRP on blood tests, joint stiffness, fatigue, or frequent infections.",
+        prevent: "Omega-3 fatty acids (EPA/DHA from fish oil or algae), turmeric/curcumin, regular moderate exercise (anti-inflammatory), adequate sleep (7-8h), stress management, Mediterranean diet, limit refined sugar and processed foods. If your CRP is chronically elevated, work with a doctor on root causes." }
+    ].map(i => `<div class="risk-legend-item">
+      <div class="rl-name">${i.name} (Score: ${i.score}/10)</div>
+      <div class="rl-what"><strong>What it is:</strong> ${i.what}</div>
+      <div class="rl-signs"><strong>How it shows up:</strong> ${i.signs}</div>
+      <div class="rl-prevent"><strong>Prevention/mitigation:</strong> ${i.prevent}</div>
+    </div>`).join('');
+  }
 }
 
 function startHelixAnimation() {
