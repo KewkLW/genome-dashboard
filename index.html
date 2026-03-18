@@ -995,6 +995,7 @@
 <!-- DASHBOARD (populated dynamically) -->
 <div id="dashboard">
   <button class="new-file-btn" onclick="clearCacheAndReload()">&#x21BB; Load New File</button>
+  <button class="new-file-btn" style="right:160px" onclick="exportForLLMs()">&#x1F4CB; Export for LLMs</button>
 
   <div class="hero">
     <canvas id="helixCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.2;"></canvas>
@@ -2680,6 +2681,210 @@ function showSuppDetail(name) {
   resultEl.innerHTML = renderSuppResult(analysis);
   resultEl.classList.add('visible');
   resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ============================================================
+// EXPORT FOR LLMs
+// ============================================================
+function exportForLLMs() {
+  const snps = window._currentSnps;
+  if (!snps) { alert('No genome data loaded.'); return; }
+
+  const lines = [];
+  lines.push('# Genome Analysis Report');
+  lines.push('');
+  lines.push('This report contains personalized genetic analysis. Use it to have an informed conversation about this individual\'s genetics, health predispositions, and supplement needs. All interpretations are based on published research but are NOT medical diagnoses.');
+  lines.push('');
+
+  // --- Key Genotypes ---
+  lines.push('## Key Genotypes');
+  lines.push('');
+
+  const keySnps = [];
+  for (const def of SNP_DB) {
+    const g = snps[def.id];
+    if (!g && !def.multi) continue;
+    let result;
+    if (def.multi) {
+      const hasAny = def.multi.some(id => snps[id]);
+      if (!hasAny) continue;
+      result = def.interpret(g, snps);
+    } else {
+      result = def.interpret(g, snps);
+    }
+    if (!result) continue;
+    const displayG = result.genotype || g;
+    const cleanDetail = result.detail.replace(/<[^>]+>/g, '');
+    lines.push(`### ${def.title} (${def.gene})`);
+    lines.push(`- **SNP:** ${def.multi ? def.multi.join(', ') : def.id}`);
+    lines.push(`- **Genotype:** ${displayG}`);
+    lines.push(`- **Result:** ${result.tag}`);
+    lines.push(`- **Detail:** ${cleanDetail}`);
+    lines.push('');
+    keySnps.push({ snp: def.multi ? def.multi.join(', ') : def.id, gene: def.gene, title: def.title, genotype: displayG, result: result.tag });
+  }
+
+  // --- Neurotransmitter Profile ---
+  lines.push('## Neurotransmitter Profile (1-10 scale, 5 = population average)');
+  lines.push('');
+  const comt = snps['rs4680'] || '';
+  const dopClearance = comt === 'GG' ? 9 : comt === 'AA' ? 2 : 5;
+  const bdnf = snps['rs6265'] || '';
+  const bdnfScore = bdnf === 'CC' ? 9 : bdnf === 'TT' ? 3 : 6;
+  const oxtr = snps['rs53576'] || '';
+  const oxtrScore = oxtr === 'GG' ? 9 : oxtr === 'AA' ? 3 : 6;
+  const drd2 = snps['rs1800497'] || '';
+  const drd2Score = drd2 === 'GG' ? 8 : drd2 === 'AA' ? 3 : 5;
+  const oprm = snps['rs1799971'] || '';
+  const oprmScore = oprm === 'AA' ? 5 : oprm === 'GG' ? 8 : 6;
+  const dbh = snps['rs1611115'] || '';
+  const dbhScore = dbh === 'CC' ? 8 : dbh === 'TT' ? 3 : 5;
+  const serotonin = snps['rs6311'] || '';
+  const serScore = (serotonin === 'CT' || serotonin === 'TC') ? 5 : serotonin === 'CC' ? 7 : 4;
+
+  const neuroProfile = [
+    { name: 'Dopamine Clearance (COMT)', score: dopClearance },
+    { name: 'Serotonin Signaling (HTR2A)', score: serScore },
+    { name: 'Norepinephrine Synthesis (DBH)', score: dbhScore },
+    { name: 'BDNF Plasticity', score: bdnfScore },
+    { name: 'Opioid Sensitivity (OPRM1)', score: oprmScore },
+    { name: 'Oxytocin Sensitivity (OXTR)', score: oxtrScore },
+    { name: 'D2 Receptor Density (DRD2)', score: drd2Score }
+  ];
+  for (const n of neuroProfile) {
+    const bar = '\u2588'.repeat(n.score) + '\u2591'.repeat(10 - n.score);
+    lines.push(`- **${n.name}:** ${n.score}/10 ${bar}`);
+  }
+  lines.push('');
+
+  // --- Risk Scores ---
+  lines.push('## Health Risk Scores (1-10 scale, 1 = low, 10 = high)');
+  lines.push('');
+  const fto = snps['rs9939609'] || '';
+  const ftoRisk = fto === 'TT' ? 1 : fto === 'AA' ? 8 : 4;
+  const tcf = snps['rs7903146'] || '';
+  const t2dRisk = tcf === 'CC' ? 1 : tcf === 'TT' ? 8 : 5;
+  const fvl = snps['rs6025'] || '';
+  const fvlRisk = fvl === 'CC' ? 1 : fvl === 'TT' ? 9 : 5;
+  const apoeR358 = snps['rs429358'] || '';
+  const apoeRisk = apoeR358 === 'CC' ? 9 : apoeR358 === 'CT' ? 6 : 3;
+  const slco = snps['rs4149056'] || '';
+  const statinRisk = slco === 'TT' ? 1 : slco === 'CC' ? 9 : 5;
+  const il6 = snps['rs1800795'] || '';
+  const inflRisk = il6 === 'GG' ? 6 : il6 === 'CC' ? 2 : 4;
+
+  const risks = [
+    { name: "Alzheimer's (APOE)", score: apoeRisk },
+    { name: 'Type 2 Diabetes (TCF7L2)', score: t2dRisk },
+    { name: 'Obesity (FTO)', score: ftoRisk },
+    { name: 'Clotting (Factor V Leiden)', score: fvlRisk },
+    { name: 'Statin Myopathy (SLCO1B1)', score: statinRisk },
+    { name: 'Inflammation (IL-6)', score: inflRisk }
+  ];
+  for (const r of risks) {
+    const level = r.score <= 3 ? 'LOW' : r.score <= 6 ? 'MODERATE' : 'ELEVATED';
+    lines.push(`- **${r.name}:** ${r.score}/10 (${level})`);
+  }
+  lines.push('');
+
+  // --- Supplement Analysis ---
+  lines.push('## Supplement Analysis');
+  lines.push('');
+  lines.push('Each supplement has been cross-referenced against this individual\'s genotype. Verdicts: RECOMMENDED, BENEFICIAL, NEUTRAL, CAUTION, AVOID.');
+  lines.push('');
+
+  const analyses = SUPPLEMENT_DB.map(s => analyzeSupplementForUser(s, snps));
+  const recommended = analyses.filter(a => a.verdict === 'recommended' || (a.verdict === 'beneficial' && a.priority >= 5)).sort((a, b) => b.priority - a.priority);
+  const cautionList = analyses.filter(a => a.verdict === 'caution' || a.verdict === 'avoid').sort((a, b) => b.priority - a.priority);
+  const neutral = analyses.filter(a => !recommended.includes(a) && !cautionList.includes(a));
+
+  if (recommended.length) {
+    lines.push('### Recommended / Beneficial');
+    lines.push('');
+    for (const a of recommended) {
+      lines.push(`**${a.supplement.name}** (${a.supplement.category}) — ${a.verdict.toUpperCase()}`);
+      for (const r of a.results) {
+        if (r.verdict === 'neutral' && r.priority < 2) continue;
+        const clean = r.text.replace(/<[^>]+>/g, '');
+        lines.push(`  - ${r.gene}: ${clean}`);
+      }
+      lines.push('');
+    }
+  }
+
+  if (cautionList.length) {
+    lines.push('### Use with Caution / Avoid');
+    lines.push('');
+    for (const a of cautionList) {
+      lines.push(`**${a.supplement.name}** (${a.supplement.category}) — ${a.verdict.toUpperCase()}`);
+      for (const r of a.results) {
+        const clean = r.text.replace(/<[^>]+>/g, '');
+        lines.push(`  - ${r.gene}: ${clean}`);
+      }
+      lines.push('');
+    }
+  }
+
+  // --- Raw Genotype Data (JSON) ---
+  lines.push('## Raw Genotype Data');
+  lines.push('');
+  lines.push('JSON mapping of rsID to genotype for all analyzed variants. Use this for precise lookups.');
+  lines.push('');
+  lines.push('```json');
+
+  const relevantSnps = {};
+  const allRelevantIds = new Set();
+  SNP_DB.forEach(s => { allRelevantIds.add(s.id); if (s.multi) s.multi.forEach(m => allRelevantIds.add(m)); });
+  SUPPLEMENT_DB.forEach(s => s.genes.forEach(g => g.snps.forEach(id => allRelevantIds.add(id))));
+  for (const id of [...allRelevantIds].sort()) {
+    if (snps[id] && snps[id] !== '--') relevantSnps[id] = snps[id];
+  }
+  lines.push(JSON.stringify(relevantSnps, null, 2));
+  lines.push('```');
+  lines.push('');
+
+  // --- Instructions for the LLM ---
+  lines.push('## Instructions for AI');
+  lines.push('');
+  lines.push('You are reviewing a personal genome analysis. When discussing this data:');
+  lines.push('- Be accurate about what each genotype means based on published research.');
+  lines.push('- Distinguish between strong effect sizes (APOE e4, MTHFR 677TT) and modest ones (OXTR, CLOCK).');
+  lines.push('- Remind the user that most traits are polygenic; single SNP results are one piece of the picture.');
+  lines.push('- For supplement questions, reference the genotype-specific analysis above.');
+  lines.push('- Never diagnose. Frame everything as genetic predisposition, not certainty.');
+  lines.push('- If asked about a SNP not in this report, say so rather than guessing.');
+  lines.push('- This data is from a consumer genotyping chip, not clinical sequencing. Error rate is 0.1-0.5%.');
+
+  const report = lines.join('\n');
+
+  // Copy to clipboard and also offer download
+  navigator.clipboard.writeText(report).then(() => {
+    // Show brief confirmation
+    const btn = document.querySelector('button[onclick="exportForLLMs()"]');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '&#x2705; Copied to clipboard!';
+    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.borderColor = ''; btn.style.color = ''; }, 2500);
+  }).catch(() => {
+    // Fallback: download as file
+    downloadReport(report);
+  });
+
+  // Also trigger download
+  downloadReport(report);
+}
+
+function downloadReport(text) {
+  const blob = new Blob([text], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'genome-report-for-llm.md';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ============================================================
