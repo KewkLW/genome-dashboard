@@ -1550,6 +1550,476 @@ const SNP_DB = [
       if (g === 'AA') return { tag: 'Higher Dependence Risk', tagClass: 'tag-risk', detail: 'Two copies: strongest association with heavy smoking, difficulty quitting, and increased lung cancer risk per cigarette.' };
       return null;
     }
+  },
+
+  // ---- PHARMACOGENOMICS (expanded) ----
+  {
+    id: 'rs4244285', gene: 'CYP2C19', title: 'CYP2C19 — Clopidogrel/SSRIs', category: 'pharma', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Metabolizer (*1/*1)', tagClass: 'tag-normal', detail: 'GG: normal CYP2C19 activity. Standard metabolism of clopidogrel (Plavix), PPIs (omeprazole), SSRIs (citalopram, escitalopram), and antifungals (voriconazole). No dose adjustment needed.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate (*1/*2)', tagClass: 'tag-carrier', detail: 'AG: one loss-of-function allele. Reduced activation of clopidogrel (higher cardiovascular event risk). May need alternative antiplatelet (prasugrel/ticagrelor). Slower SSRI metabolism; watch for side effects.' };
+      if (g === 'AA') return { tag: 'Poor Metabolizer (*2/*2)', tagClass: 'tag-risk', detail: 'AA: CYP2C19 essentially non-functional. Clopidogrel will NOT work (FDA boxed warning). SSRIs accumulate, causing increased side effects. PPIs are more effective but risk overexposure. This is one of the most clinically actionable pharmacogenomic results.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs12248560', gene: 'CYP2C19', title: 'CYP2C19 *17 — Rapid Metabolizer', category: 'pharma', color: 'cyan',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Activity', tagClass: 'tag-normal', detail: 'CC: no *17 gain-of-function allele. Standard CYP2C19 activity.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Rapid Metabolizer (*1/*17)', tagClass: 'tag-notable', detail: 'CT: one *17 ultra-rapid allele. Faster metabolism of SSRIs (may need higher doses), PPIs (reduced effectiveness), and clopidogrel (enhanced activation, slightly higher bleeding risk). ~18% of Europeans carry this.' };
+      if (g === 'TT') return { tag: 'Ultra-Rapid (*17/*17)', tagClass: 'tag-notable', detail: 'TT: ultra-rapid metabolizer. Drugs cleared very quickly. SSRIs may be ineffective at standard doses. PPIs may not suppress acid adequately. Clopidogrel works well but bleeding risk slightly increased.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1065852', gene: 'CYP2D6', title: 'CYP2D6 — Codeine/Antidepressants', category: 'pharma', color: 'red',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Metabolizer', tagClass: 'tag-normal', detail: 'GG: normal CYP2D6 function. Metabolizes ~25% of all drugs: codeine, tramadol, tamoxifen, many antidepressants (fluoxetine, paroxetine, venlafaxine), antipsychotics (risperidone, aripiprazole), beta-blockers (metoprolol). Standard dosing appropriate.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate Metabolizer', tagClass: 'tag-carrier', detail: 'AG: reduced CYP2D6 activity. Codeine may be less effective (reduced morphine conversion). Tamoxifen activation impaired. Antidepressants and antipsychotics may accumulate. Consider dose adjustments or alternative drugs.' };
+      if (g === 'AA') return { tag: 'Poor Metabolizer', tagClass: 'tag-risk', detail: 'AA: very low CYP2D6 activity. Codeine/tramadol will NOT produce adequate pain relief. Tamoxifen will not be properly activated (critical for breast cancer patients). Antidepressants and antipsychotics accumulate to toxic levels at standard doses. Always flag this with prescribers.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1799853', gene: 'CYP2C9', title: 'CYP2C9 *2 — Warfarin/NSAIDs', category: 'pharma', color: 'yellow',
+    multi: ['rs1799853', 'rs1057910'],
+    interpret: (g, all) => {
+      const c2 = all['rs1799853'] || '';
+      const c3 = all['rs1057910'] || '';
+      let stars = '*1/*1';
+      let tagClass = 'tag-normal';
+      let risk = 'normal';
+      if ((c2 === 'CT' || c2 === 'TC') && (c3 === 'AA')) { stars = '*1/*2'; tagClass = 'tag-carrier'; risk = 'intermediate'; }
+      else if ((c2 === 'TT') && (c3 === 'AA')) { stars = '*2/*2'; tagClass = 'tag-risk'; risk = 'poor'; }
+      else if ((c2 === 'CC') && (c3 === 'AC' || c3 === 'CA')) { stars = '*1/*3'; tagClass = 'tag-carrier'; risk = 'intermediate'; }
+      else if ((c2 === 'CC') && (c3 === 'CC')) { stars = '*3/*3'; tagClass = 'tag-risk'; risk = 'poor'; }
+      else if ((c2 === 'CT' || c2 === 'TC') && (c3 === 'AC' || c3 === 'CA')) { stars = '*2/*3'; tagClass = 'tag-risk'; risk = 'poor'; }
+      const detail = risk === 'normal'
+        ? `CYP2C9 ${stars} (rs1799853:${c2}, rs1057910:${c3}). Normal metabolism of warfarin, NSAIDs (ibuprofen, celecoxib), losartan, and sulfonylureas.`
+        : risk === 'intermediate'
+        ? `CYP2C9 ${stars}. Reduced metabolism. Warfarin dose should be ~20-30% lower. NSAIDs clear slower (higher GI bleed risk). Celecoxib, losartan, and some sulfonylureas affected.`
+        : `CYP2C9 ${stars}. Severely reduced metabolism. Warfarin dose reduction ~50% or more. High risk of NSAID-induced GI bleeding at standard doses. Critical pharmacogenomic result.`;
+      return { tag: `${stars} — ${risk.charAt(0).toUpperCase() + risk.slice(1)}`, tagClass, detail, genotype: `${c2} / ${c3}` };
+    }
+  },
+  {
+    id: 'rs776746', gene: 'CYP3A5', title: 'CYP3A5 — Tacrolimus', category: 'pharma', color: 'green',
+    interpret: g => {
+      if (g === 'CC' || g === 'TT') return { tag: 'Non-Expresser (*3/*3)', tagClass: 'tag-info', detail: 'Homozygous *3: CYP3A5 not expressed (most common in Europeans, ~85-95%). Tacrolimus levels run higher at standard doses. CYP3A4 handles the workload instead.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate (*1/*3)', tagClass: 'tag-carrier', detail: 'One functional *1 allele. Some CYP3A5 expression. May need higher tacrolimus doses post-transplant. Also affects some statins and calcium channel blockers.' };
+      if (g === 'CC') return { tag: 'Expresser (*1/*1)', tagClass: 'tag-notable', detail: 'Full CYP3A5 expression (common in African populations). Rapid tacrolimus clearance; may need 1.5-2x standard dose.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs3918290', gene: 'DPYD', title: 'DPYD — Fluoropyrimidine Toxicity', category: 'pharma', color: 'red',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Normal DPD Activity', tagClass: 'tag-normal', detail: 'Reference genotype. Normal dihydropyrimidine dehydrogenase. Standard fluoropyrimidine (5-FU, capecitabine) dosing is safe.' };
+      if (g === 'CT' || g === 'TC' || g === 'AG' || g === 'GA') return { tag: 'Partial DPD Deficiency', tagClass: 'tag-risk', detail: 'Heterozygous DPYD*2A. DPD activity reduced ~50%. Standard 5-FU/capecitabine doses cause severe, potentially fatal toxicity. Dose must be reduced by at least 50%. Pre-treatment DPYD testing is now mandated in the EU.' };
+      if (g === 'TT' || g === 'AA') return { tag: 'Complete DPD Deficiency', tagClass: 'tag-risk', detail: 'Homozygous DPYD*2A. No DPD activity. 5-FU/capecitabine is CONTRAINDICATED. Standard doses are likely fatal. This must be flagged to any oncologist.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs887829', gene: 'UGT1A1', title: 'UGT1A1 — Irinotecan/Gilbert', category: 'pharma', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC' || g === 'TT') return { tag: 'Normal Conjugation', tagClass: 'tag-normal', detail: 'UGT1A1*1/*1. Normal bilirubin glucuronidation. Standard irinotecan dosing. No Gilbert syndrome.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate (*1/*28)', tagClass: 'tag-carrier', detail: 'Heterozygous *28. Mildly reduced UGT1A1 activity. May have slightly elevated bilirubin. Irinotecan toxicity risk modestly increased; monitor closely.' };
+      if (g === 'CC') return { tag: '*28/*28 — Gilbert Syndrome', tagClass: 'tag-notable', detail: 'Homozygous *28. Reduced UGT1A1 activity. Causes Gilbert syndrome (benign elevated bilirubin, mild jaundice). Irinotecan dose should be reduced (3-4x toxicity risk at standard dose). Also affects atazanavir (HIV) metabolism.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2032582', gene: 'ABCB1/MDR1', title: 'P-Glycoprotein (Drug Efflux)', category: 'pharma', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal P-gp Activity', tagClass: 'tag-normal', detail: 'GG: normal P-glycoprotein expression. This membrane pump controls drug absorption and brain penetration for digoxin, cyclosporine, HIV protease inhibitors, some statins, and many cancer drugs.' };
+      if (g === 'GT' || g === 'TG' || g === 'GA' || g === 'AG') return { tag: 'Intermediate', tagClass: 'tag-carrier', detail: 'Heterozygous: intermediate P-gp activity. Drug levels may be slightly higher than expected for substrates like digoxin, cyclosporine, and some chemotherapy agents.' };
+      if (g === 'TT' || g === 'AA') return { tag: 'Reduced Efflux', tagClass: 'tag-notable', detail: 'Homozygous variant: reduced P-glycoprotein. Higher drug absorption and brain penetration. Digoxin and cyclosporine may reach higher levels. Some CNS drugs may be more effective (or have more side effects).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs4986893', gene: 'CYP2C19', title: 'CYP2C19 *3', category: 'pharma', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'No *3 Allele', tagClass: 'tag-normal', detail: 'GG: no CYP2C19*3 loss-of-function allele. *3 is rare in Europeans (~0.04%) but found in 2-9% of Asians.' };
+      if (g === 'GA' || g === 'AG') return { tag: '*3 Carrier', tagClass: 'tag-carrier', detail: 'GA: one *3 allele. Complete loss of function on this allele. Combined with your *2 status determines your overall CYP2C19 phenotype. Important for clopidogrel and SSRIs.' };
+      if (g === 'AA') return { tag: '*3/*3 — Non-Functional', tagClass: 'tag-risk', detail: 'AA: homozygous *3. CYP2C19 non-functional. Same clinical implications as *2/*2: clopidogrel failure, SSRI accumulation, PPI overexposure.' };
+      return null;
+    }
+  },
+
+  // ---- CARDIOVASCULAR ----
+  {
+    id: 'rs1333049', gene: '9p21/CDKN2A/B', title: '9p21 — Heart Attack Risk', category: 'cardiovascular', color: 'red',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Lower Risk', tagClass: 'tag-normal', detail: 'GG: no risk alleles at 9p21, the strongest common genetic risk locus for coronary artery disease and myocardial infarction. This region regulates cell cycle genes (CDKN2A/B) that affect arterial smooth muscle.' };
+      if (g === 'GC' || g === 'CG') return { tag: 'One Risk Allele (~1.3x)', tagClass: 'tag-carrier', detail: 'GC: one copy of the 9p21 risk allele. ~1.3x increased risk of CAD. This risk is independent of traditional factors (cholesterol, blood pressure) and additive with them.' };
+      if (g === 'CC') return { tag: 'Two Risk Alleles (~1.6x)', tagClass: 'tag-risk', detail: 'CC: homozygous 9p21 risk. ~1.6x increased coronary artery disease risk. Affects ~25% of Europeans. Risk is modifiable by diet (Mediterranean diet nearly eliminates the excess risk in carriers).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs10455872', gene: 'LPA', title: 'Lipoprotein(a)', category: 'cardiovascular', color: 'red',
+    interpret: g => {
+      if (g === 'AA' || g === 'GG') return { tag: 'Normal Lp(a)', tagClass: 'tag-normal', detail: 'Reference genotype. Normal lipoprotein(a) levels expected. Lp(a) is an independent cardiovascular risk factor that is almost entirely genetically determined.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Elevated Lp(a)', tagClass: 'tag-risk', detail: 'One risk allele: Lp(a) likely elevated (>50 nmol/L). Lp(a) is a sticky, inflammatory lipoprotein that promotes atherosclerosis and clotting. Unlike LDL, it does not respond to diet or statins. PCSK9 inhibitors and emerging antisense therapies (pelacarsen) can reduce it. Get your Lp(a) measured; if elevated, intensify other risk factor management.' };
+      if (g === 'GG' || g === 'AA') return { tag: 'High Lp(a)', tagClass: 'tag-risk', detail: 'Homozygous: very high Lp(a) expected. Strong independent cardiovascular risk. Get Lp(a) blood test. Discuss with cardiologist.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1800896', gene: 'IL-10', title: 'IL-10 — Anti-inflammatory', category: 'cardiovascular', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Higher IL-10 Producer', tagClass: 'tag-normal', detail: 'GG: higher IL-10 production. IL-10 is anti-inflammatory, balancing the pro-inflammatory cytokines. Associated with better cardiovascular outcomes and lower autoimmune risk.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate IL-10', tagClass: 'tag-info', detail: 'AG: intermediate IL-10 production. Balanced inflammatory regulation.' };
+      if (g === 'AA') return { tag: 'Lower IL-10', tagClass: 'tag-carrier', detail: 'AA: lower IL-10 production. Reduced anti-inflammatory capacity. When combined with high IL-6 (pro-inflammatory), creates a more inflammatory overall profile. Anti-inflammatory lifestyle especially important.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1799752', gene: 'ACE', title: 'ACE — Blood Pressure/Endurance', category: 'cardiovascular', color: 'blue',
+    interpret: g => {
+      if (g === 'DD' || g === 'GG') return { tag: 'DD — Higher ACE Activity', tagClass: 'tag-carrier', detail: 'DD genotype (insertion/deletion polymorphism). Higher ACE activity, higher angiotensin II, stronger vasoconstriction. Associated with higher blood pressure, heart disease risk, but also power athletic performance. ACE inhibitors are especially effective for DD carriers.' };
+      if (g === 'DI' || g === 'ID' || g === 'AG' || g === 'GA') return { tag: 'ID — Intermediate', tagClass: 'tag-info', detail: 'ID: intermediate ACE levels. Balanced between the cardiovascular risk of DD and the endurance benefit of II.' };
+      if (g === 'II' || g === 'AA') return { tag: 'II — Lower ACE Activity', tagClass: 'tag-normal', detail: 'II genotype. Lower ACE activity, lower angiotensin II. Associated with endurance athletic performance, lower blood pressure, and better response to endurance training. Less responsive to ACE inhibitors (already low).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs5186', gene: 'AGTR1', title: 'Angiotensin II Receptor', category: 'cardiovascular', color: 'green',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'AA: normal angiotensin II receptor type 1 expression. Standard blood pressure regulation.' };
+      if (g === 'AC' || g === 'CA') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'AC: increased AGTR1 expression. Modestly higher blood pressure and cardiovascular risk. ARBs (losartan, valsartan) target this receptor and may be especially effective.' };
+      if (g === 'CC') return { tag: 'Elevated Expression', tagClass: 'tag-risk', detail: 'CC: highest AGTR1 expression. Stronger vasoconstriction response to angiotensin II. Associated with hypertension and aortic stiffness. ARBs are a good pharmacological match.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1799983', gene: 'NOS3/eNOS', title: 'eNOS — Nitric Oxide', category: 'cardiovascular', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal NO Production', tagClass: 'tag-normal', detail: 'GG: normal endothelial nitric oxide synthase. Good NO production for vasodilation, blood flow, and endothelial health.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Reduced NO', tagClass: 'tag-carrier', detail: 'GT: reduced eNOS activity. Lower nitric oxide production may impair vasodilation. Dietary nitrates (beets, leafy greens), exercise, and arginine/citrulline support NO production.' };
+      if (g === 'TT') return { tag: 'Lowest NO Production', tagClass: 'tag-risk', detail: 'TT: most reduced eNOS. Impaired vasodilation, higher blood pressure tendency, reduced exercise blood flow. Beetroot juice, citrulline, and regular aerobic exercise are especially beneficial.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs708272', gene: 'CETP', title: 'CETP — HDL Cholesterol', category: 'cardiovascular', color: 'green',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Higher HDL', tagClass: 'tag-normal', detail: 'AA: reduced CETP activity. Higher HDL cholesterol (the "good" cholesterol). Associated with cardiovascular protection and longevity. Common in centenarian populations.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate HDL', tagClass: 'tag-info', detail: 'AG: intermediate CETP activity and HDL levels.' };
+      if (g === 'GG') return { tag: 'Lower HDL', tagClass: 'tag-carrier', detail: 'GG: higher CETP activity. HDL tends to be lower. Focus on exercise (raises HDL), moderate alcohol, omega-3s, and niacin if clinically indicated.' };
+      return null;
+    }
+  },
+
+  // ---- MENTAL HEALTH ----
+  {
+    id: 'rs25531', gene: 'SLC6A4', title: 'Serotonin Transporter (5-HTTLPR)', category: 'mental', color: 'purple',
+    interpret: g => {
+      if (g === 'AA' || g === 'TT') return { tag: 'Long/Long — Resilient', tagClass: 'tag-normal', detail: 'L/L: higher serotonin transporter expression. More efficient serotonin reuptake. Associated with better stress resilience, lower depression risk, and better SSRI response. The "resilient" genotype in gene-environment interaction studies.' };
+      if (g === 'AG' || g === 'GA' || g === 'AC' || g === 'CA') return { tag: 'Long/Short — Intermediate', tagClass: 'tag-carrier', detail: 'L/S: intermediate serotonin transporter expression. Mildly increased sensitivity to stressful life events. Moderate depression risk. SSRIs typically effective.' };
+      if (g === 'GG' || g === 'CC') return { tag: 'Short/Short — Sensitive', tagClass: 'tag-notable', detail: 'S/S: lowest serotonin transporter expression. Heightened amygdala reactivity to negative stimuli. Higher risk of depression and anxiety following stressful events. However, also more responsive to positive environments ("differential susceptibility"). SSRIs may be less effective; SNRIs or therapy may be preferable. Exercise and social support are especially protective.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs6311', gene: 'HTR2A', title: 'Serotonin 2A Receptor', category: 'mental', color: 'purple',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Higher Expression', tagClass: 'tag-info', detail: 'CC: higher HTR2A expression. More serotonin 2A receptors. Generally associated with better mood stability. May have stronger psychedelic response (5-HT2A is the primary target of psilocybin/LSD).' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate', tagClass: 'tag-info', detail: 'CT: intermediate receptor expression. Balanced serotonin 2A signaling.' };
+      if (g === 'TT') return { tag: 'Lower Expression', tagClass: 'tag-carrier', detail: 'TT: lower HTR2A expression. Associated with higher anxiety, depression susceptibility, and altered antidepressant response. Some studies link it to better response to atypical antipsychotics.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1360780', gene: 'FKBP5', title: 'FKBP5 — Stress/Cortisol', category: 'mental', color: 'purple',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Cortisol Regulation', tagClass: 'tag-normal', detail: 'CC: normal FKBP5 expression. Standard cortisol receptor sensitivity and HPA axis recovery after stress.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Altered Stress Response', tagClass: 'tag-carrier', detail: 'CT: one risk allele. FKBP5 modulates glucocorticoid receptor sensitivity. This variant causes prolonged cortisol elevation after stress and slower HPA axis recovery. Associated with increased PTSD risk following trauma, depression, and metabolic syndrome.' };
+      if (g === 'TT') return { tag: 'High-Risk Stress Response', tagClass: 'tag-risk', detail: 'TT: both risk alleles. Strongly altered cortisol feedback loop. Significantly increased risk of PTSD, depression, and anxiety disorders following adverse life events. Also associated with epigenetic changes that can be intergenerational. Stress management, therapy, and cortisol-reducing practices (meditation, exercise) are especially important.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs6323', gene: 'MAOA', title: 'MAOA — Monoamine Oxidase A', category: 'mental', color: 'purple',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Higher MAO-A Activity', tagClass: 'tag-info', detail: 'TT: higher MAO-A activity. Faster breakdown of serotonin, dopamine, and norepinephrine. Associated with lower aggression but potentially lower baseline mood. MAOIs would be more effective.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Intermediate', tagClass: 'tag-info', detail: 'GT: intermediate MAO-A activity. Balanced monoamine breakdown.' };
+      if (g === 'GG') return { tag: 'Lower MAO-A Activity', tagClass: 'tag-notable', detail: 'GG: lower MAO-A expression. Slower serotonin/dopamine breakdown. The "warrior gene" in media (misleading). Higher baseline monoamines; associated with reactive aggression only in context of childhood adversity (gene-environment interaction). In positive environments, associated with better mood and prosocial behavior.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs6295', gene: 'HTR1A', title: 'Serotonin 1A Receptor', category: 'mental', color: 'purple',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal 5-HT1A', tagClass: 'tag-normal', detail: 'CC: normal serotonin 1A autoreceptor function. Standard serotonin self-regulation. Better antidepressant response expected.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'Intermediate', tagClass: 'tag-carrier', detail: 'CG: intermediate 5-HT1A autoreceptor density. Modestly higher depression risk.' };
+      if (g === 'GG') return { tag: 'Higher Autoreceptor Density', tagClass: 'tag-carrier', detail: 'GG: higher 5-HT1A autoreceptor density. These autoreceptors suppress serotonin release. Net effect: less serotonin signaling. Associated with higher depression risk, anxiety, and reduced SSRI response. The 5-HT1A receptor is a key drug target (buspirone, vilazodone).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs4570625', gene: 'TPH2', title: 'TPH2 — Serotonin Synthesis', category: 'mental', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Serotonin Synthesis', tagClass: 'tag-normal', detail: 'GG: normal tryptophan hydroxylase 2 activity. TPH2 is the rate-limiting enzyme for brain serotonin production.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Reduced Synthesis', tagClass: 'tag-carrier', detail: 'GT: one variant allele. Mildly reduced brain serotonin synthesis. Associated with increased amygdala reactivity and anxiety susceptibility.' };
+      if (g === 'TT') return { tag: 'Most Reduced', tagClass: 'tag-risk', detail: 'TT: both variant alleles. Most reduced TPH2 activity. Lower brain serotonin production. Associated with major depression, anxiety disorders, and suicidal behavior in clinical studies. Adequate tryptophan intake (turkey, eggs, nuts) and exercise support serotonin synthesis.' };
+      return null;
+    }
+  },
+
+  // ---- AUTOIMMUNE ----
+  {
+    id: 'rs13202464', gene: 'HLA-B*27', title: 'HLA-B27 — Ankylosing Spondylitis', category: 'autoimmune', color: 'red',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'B27 Negative', tagClass: 'tag-normal', detail: 'GG: likely HLA-B27 negative. Very low risk for ankylosing spondylitis and reactive arthritis from this locus. (Note: this tag SNP is a proxy, not a direct B27 test.)' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Possible B27 Carrier', tagClass: 'tag-carrier', detail: 'AG: may carry one HLA-B27 allele (tag SNP proxy). If B27 positive, 5-20% lifetime risk of ankylosing spondylitis (inflammatory back pain). B27 is also associated with anterior uveitis and reactive arthritis. Only ~5-6% of B27 carriers develop AS.' };
+      if (g === 'AA') return { tag: 'Likely B27 Positive', tagClass: 'tag-risk', detail: 'AA: likely HLA-B27 positive. Watch for inflammatory back pain (worse in morning, improves with movement, onset before age 40). Early detection and treatment with biologics (TNF inhibitors, IL-17 inhibitors) can prevent spinal fusion.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2476601', gene: 'PTPN22', title: 'PTPN22 — Autoimmune Risk', category: 'autoimmune', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'GG: reference PTPN22 (protein tyrosine phosphatase). Normal T-cell regulation. No increased autoimmune risk from this variant.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'AG: one copy of R620W. This variant is a shared risk factor for multiple autoimmune diseases: type 1 diabetes (~1.7x), rheumatoid arthritis (~1.6x), lupus, Hashimoto thyroiditis, and Graves disease. It causes T-cells to be less tolerant of self-antigens.' };
+      if (g === 'AA') return { tag: 'Two Risk Alleles', tagClass: 'tag-risk', detail: 'AA: homozygous R620W. Strongest autoimmune predisposition from this locus. Elevated risk across multiple autoimmune conditions. Monitor for thyroid antibodies, joint inflammation, and blood sugar if family history is present.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs3087243', gene: 'CTLA4', title: 'CTLA-4 — Immune Checkpoint', category: 'autoimmune', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Immune Regulation', tagClass: 'tag-normal', detail: 'GG: normal CTLA-4 expression. CTLA-4 is an immune checkpoint that prevents T-cells from attacking your own tissues. (Ipilimumab, a cancer drug, works by blocking CTLA-4 to unleash immune attack on tumors.)' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Mildly Reduced', tagClass: 'tag-carrier', detail: 'AG: one risk allele. Slightly reduced CTLA-4 function. Modest increase in risk for Graves disease, type 1 diabetes, and Hashimoto thyroiditis.' };
+      if (g === 'AA') return { tag: 'Reduced Checkpoint', tagClass: 'tag-carrier', detail: 'AA: most reduced CTLA-4 expression. Lower immune checkpoint activity means your immune system is slightly more likely to attack self-tissues. Associated with autoimmune thyroid disease, T1D, and celiac disease.' };
+      return null;
+    }
+  },
+
+  // ---- DETOX & ANTIOXIDANT ----
+  {
+    id: 'rs4880', gene: 'SOD2/MnSOD', title: 'SOD2 — Superoxide Dismutase', category: 'detox', color: 'yellow',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Ala/Ala — Higher Activity', tagClass: 'tag-normal', detail: 'TT (Ala/Ala): efficient mitochondrial SOD2 targeting. Higher superoxide detoxification in mitochondria. Good baseline antioxidant defense.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Ala/Val — Intermediate', tagClass: 'tag-info', detail: 'CT (Ala/Val): intermediate SOD2 activity. One efficient and one less efficient allele.' };
+      if (g === 'CC') return { tag: 'Val/Val — Reduced Activity', tagClass: 'tag-carrier', detail: 'CC (Val/Val): SOD2 protein does not fold optimally in mitochondria. Reduced superoxide clearance, leading to more mitochondrial oxidative stress. Antioxidant support (NAC, vitamin C, CoQ10) and avoiding excessive iron/copper intake helps reduce oxidative load.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1695', gene: 'GSTP1', title: 'GSTP1 — Glutathione Transferase', category: 'detox', color: 'green',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Normal Detox', tagClass: 'tag-normal', detail: 'AA (Ile105): normal glutathione S-transferase P1 activity. Efficient conjugation of environmental toxins, pesticides, carcinogens, and reactive oxygen species with glutathione.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Reduced (Ile/Val)', tagClass: 'tag-carrier', detail: 'AG (Ile/Val): reduced GSTP1 catalytic activity for many substrates. Slower detoxification of polycyclic aromatic hydrocarbons (smoke, grilled meat), some chemotherapy drugs, and oxidative stress byproducts.' };
+      if (g === 'GG') return { tag: 'Low Activity (Val/Val)', tagClass: 'tag-risk', detail: 'GG (Val/Val): substantially reduced GSTP1 activity. Impaired Phase II detoxification. Higher susceptibility to environmental carcinogens. Cruciferous vegetables (broccoli, Brussels sprouts) upregulate other GSTs to compensate. NAC and glutathione supplementation help.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1800566', gene: 'NQO1', title: 'NQO1 — Quinone Reductase', category: 'detox', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal NQO1', tagClass: 'tag-normal', detail: 'CC: full NQO1 (NAD(P)H:quinone oxidoreductase) activity. Detoxifies quinones, activates CoQ10, protects against oxidative stress. Also activates some cancer prodrugs.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Reduced Activity', tagClass: 'tag-carrier', detail: 'CT: ~50% NQO1 activity. Reduced ability to detoxify benzene metabolites and environmental quinones. Increased oxidative stress susceptibility.' };
+      if (g === 'TT') return { tag: 'No Activity (*2/*2)', tagClass: 'tag-risk', detail: 'TT: NQO1 protein is unstable and rapidly degraded. No functional enzyme. Higher risk of benzene toxicity (bone marrow), reduced CoQ10 activation, and increased susceptibility to therapy-related leukemia. Avoid benzene exposure (solvents, gasoline fumes, cigarette smoke).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1050450', gene: 'GPX1', title: 'GPX1 — Glutathione Peroxidase', category: 'detox', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal GPX1', tagClass: 'tag-normal', detail: 'CC (Pro198): normal glutathione peroxidase 1 activity. Efficiently converts hydrogen peroxide to water using glutathione as substrate. Key selenium-dependent antioxidant enzyme.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Reduced (Pro/Leu)', tagClass: 'tag-carrier', detail: 'CT: reduced GPX1 activity. Lower hydrogen peroxide detoxification. Adequate selenium intake (Brazil nuts, seafood) is especially important for supporting remaining enzyme function.' };
+      if (g === 'TT') return { tag: 'Lowest Activity', tagClass: 'tag-risk', detail: 'TT (Leu198): lowest GPX1 activity. Impaired hydrogen peroxide clearance. Higher oxidative stress at baseline. Selenium supplementation (200 mcg/day), NAC, and vitamin C help compensate.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1056806', gene: 'CAT', title: 'Catalase', category: 'detox', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Catalase', tagClass: 'tag-normal', detail: 'CC: normal catalase activity. Converts hydrogen peroxide to water and oxygen. Works alongside GPX1 as a primary antioxidant defense.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Mildly Reduced', tagClass: 'tag-carrier', detail: 'CT: modestly reduced catalase activity. Antioxidant-rich diet helps compensate.' };
+      if (g === 'TT') return { tag: 'Reduced Catalase', tagClass: 'tag-risk', detail: 'TT: reduced catalase activity. Combined with low GPX1, this means impaired hydrogen peroxide clearance from both major pathways. Antioxidant support is important.' };
+      return null;
+    }
+  },
+
+  // ---- NUTRIGENOMICS (expanded) ----
+  {
+    id: 'rs7501331', gene: 'BCMO1', title: 'Beta-Carotene Conversion', category: 'nutrition', color: 'orange',
+    multi: ['rs7501331', 'rs12934922'],
+    interpret: (g, all) => {
+      const v1 = all['rs7501331'] || '';
+      const v2 = all['rs12934922'] || '';
+      let poor = 0;
+      if (v1 === 'CT' || v1 === 'TC') poor += 1;
+      if (v1 === 'TT') poor += 2;
+      if (v2 === 'AT' || v2 === 'TA') poor += 1;
+      if (v2 === 'TT') poor += 2;
+      if (poor === 0) return { tag: 'Good Converter', tagClass: 'tag-normal', detail: `BCMO1 normal (${v1}/${v2}). You efficiently convert beta-carotene (carrots, sweet potatoes) into retinol (active vitamin A). Plant sources of vitamin A are sufficient for you.`, genotype: `${v1} / ${v2}` };
+      if (poor <= 2) return { tag: 'Reduced Conversion (~30-50%)', tagClass: 'tag-carrier', detail: `BCMO1 variants reduce beta-carotene to retinol conversion by 30-50% (${v1}/${v2}). You may not get enough vitamin A from plant sources alone. Consider preformed retinol from eggs, liver, dairy, or retinol supplements.`, genotype: `${v1} / ${v2}` };
+      return { tag: 'Poor Converter (~70% reduced)', tagClass: 'tag-risk', detail: `BCMO1 compound variant (${v1}/${v2}). Beta-carotene conversion reduced by up to 70%. Relying on carrots and sweet potatoes for vitamin A is insufficient for you. Preformed retinol (animal sources or supplements) is necessary. ~45% of the population has at least one variant.`, genotype: `${v1} / ${v2}` };
+    }
+  },
+  {
+    id: 'rs2228570', gene: 'VDR (FokI)', title: 'Vitamin D Receptor', category: 'nutrition', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC' || g === 'AA') return { tag: 'More Active VDR', tagClass: 'tag-normal', detail: 'FF genotype: shorter, more active vitamin D receptor protein. Better response to vitamin D. Standard supplementation doses should be effective.' };
+      if (g === 'CT' || g === 'TC' || g === 'AG' || g === 'GA') return { tag: 'Intermediate', tagClass: 'tag-info', detail: 'Ff: intermediate VDR activity. May need somewhat higher vitamin D to achieve optimal 25(OH)D levels.' };
+      if (g === 'TT' || g === 'GG') return { tag: 'Less Active VDR', tagClass: 'tag-carrier', detail: 'ff: longer, less active VDR protein. Reduced vitamin D signaling even at normal blood levels. You may need higher supplemental doses (3000-5000 IU/day) and should aim for 25(OH)D levels on the higher end of the range (50-60 ng/mL).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2282679', gene: 'GC/VDBP', title: 'Vitamin D Binding Protein', category: 'nutrition', color: 'yellow',
+    interpret: g => {
+      if (g === 'AA' || g === 'TT') return { tag: 'Normal D Transport', tagClass: 'tag-normal', detail: 'Reference: normal vitamin D binding protein levels. Standard transport of vitamin D in blood.' };
+      if (g === 'AC' || g === 'CA' || g === 'TG' || g === 'GT') return { tag: 'Lower VDBP', tagClass: 'tag-carrier', detail: 'Heterozygous: lower vitamin D binding protein. Your total 25(OH)D may test lower, but free (bioavailable) vitamin D may be adequate. Context matters when interpreting blood tests.' };
+      if (g === 'CC' || g === 'GG') return { tag: 'Lowest VDBP', tagClass: 'tag-carrier', detail: 'Homozygous variant: lowest VDBP levels. Total 25(OH)D will test low even if free vitamin D is sufficient. Discuss with doctor; you may need free vitamin D testing rather than standard total 25(OH)D.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs12325817', gene: 'PEMT', title: 'PEMT — Choline Synthesis', category: 'nutrition', color: 'orange',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Choline Synthesis', tagClass: 'tag-normal', detail: 'CC: normal PEMT enzyme activity. PEMT converts phosphatidylethanolamine to phosphatidylcholine in the liver, an endogenous source of choline. Adequate choline from diet plus endogenous production.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'Reduced Synthesis', tagClass: 'tag-carrier', detail: 'CG: reduced PEMT activity. Lower endogenous choline production. You are more dependent on dietary choline (eggs, liver, fish, soybeans). Choline deficiency can cause fatty liver, muscle damage, and impaired brain function.' };
+      if (g === 'GG') return { tag: 'Low Choline Synthesis', tagClass: 'tag-risk', detail: 'GG: substantially reduced PEMT. You must rely heavily on dietary choline. Most people do not meet adequate intake (550 mg/day men, 425 mg/day women). Eggs are the richest common source (~150 mg per egg). Consider choline supplementation, especially if you eat few eggs.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs33972313', gene: 'SLC23A1', title: 'Vitamin C Transporter', category: 'nutrition', color: 'green',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Normal C Transport', tagClass: 'tag-normal', detail: 'Reference: normal sodium-dependent vitamin C transporter. Efficient absorption and tissue distribution of ascorbate.' };
+      if (g === 'CT' || g === 'TC' || g === 'GA' || g === 'AG') return { tag: 'Reduced Transport', tagClass: 'tag-carrier', detail: 'Heterozygous: reduced vitamin C transport efficiency. Blood levels of vitamin C run lower for the same dietary intake. Higher dietary intake or supplementation recommended to maintain optimal levels.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs602662', gene: 'FUT2', title: 'FUT2 — B12 & Gut Microbiome', category: 'nutrition', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Non-Secretor', tagClass: 'tag-notable', detail: 'GG: non-secretor (same as rs601338). Does not secrete ABO blood group antigens into saliva and mucosal surfaces. Lower bifidobacteria, reduced B12 absorption from food, resistant to norovirus. Distinct gut microbiome composition favoring different bacterial species.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Secretor (Carrier)', tagClass: 'tag-info', detail: 'AG: secretor (one functional allele sufficient). Normal mucosal ABO antigen secretion, standard B12 absorption, susceptible to norovirus.' };
+      if (g === 'AA') return { tag: 'Secretor', tagClass: 'tag-info', detail: 'AA: secretor. Full FUT2 function. Normal gut microbiome composition and nutrient absorption.' };
+      return null;
+    }
+  },
+
+  // ---- HORMONES ----
+  {
+    id: 'rs6152', gene: 'AR', title: 'Androgen Receptor (CAG repeat proxy)', category: 'hormones', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal AR Sensitivity', tagClass: 'tag-info', detail: 'GG: normal androgen receptor function. Standard testosterone signaling. (Full CAG repeat length requires sequencing; this SNP is a proxy.)' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Variant', tagClass: 'tag-info', detail: 'AG: androgen receptor variant. May have slightly altered testosterone sensitivity. Clinical significance depends on full CAG repeat context.' };
+      if (g === 'AA') return { tag: 'Altered Sensitivity', tagClass: 'tag-info', detail: 'AA: androgen receptor variant. Potentially altered testosterone sensitivity. Shorter CAG repeats = more sensitive AR = more effect per unit of testosterone, including hair loss and prostate risk.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2234693', gene: 'ESR1', title: 'Estrogen Receptor Alpha', category: 'hormones', color: 'pink',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Normal ER-alpha', tagClass: 'tag-normal', detail: 'TT: reference ESR1. Normal estrogen receptor alpha expression and signaling. Standard bone density maintenance, cardiovascular protection from estrogen, and breast tissue regulation.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate', tagClass: 'tag-info', detail: 'CT: intermediate ESR1 variant. Modestly altered estrogen sensitivity. Some studies link this to bone mineral density variation and cardiovascular response to HRT.' };
+      if (g === 'CC') return { tag: 'Variant', tagClass: 'tag-carrier', detail: 'CC: ESR1 variant associated with lower bone mineral density, altered response to hormone replacement therapy, and modified breast cancer risk in some populations. Calcium, vitamin D, and weight-bearing exercise are especially important for bone health.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs700518', gene: 'CYP19A1', title: 'Aromatase — Estrogen Synthesis', category: 'hormones', color: 'pink',
+    interpret: g => {
+      if (g === 'AA' || g === 'TT') return { tag: 'Normal Aromatase', tagClass: 'tag-normal', detail: 'Reference: normal aromatase (CYP19A1) activity. Standard conversion of testosterone to estrogen in fat tissue, brain, and bone.' };
+      if (g === 'AG' || g === 'GA' || g === 'TC' || g === 'CT') return { tag: 'Altered Activity', tagClass: 'tag-info', detail: 'Heterozygous: altered aromatase activity. May affect estrogen/testosterone balance. Higher body fat amplifies aromatase activity regardless of genotype.' };
+      if (g === 'GG' || g === 'CC') return { tag: 'Higher Aromatase', tagClass: 'tag-carrier', detail: 'Homozygous variant: potentially higher aromatase expression. May convert more testosterone to estrogen, especially in adipose tissue. Maintaining healthy body composition helps regulate this. Relevant for breast cancer risk and male hormone balance.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs523349', gene: 'SRD5A2', title: '5-Alpha Reductase — DHT', category: 'hormones', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal DHT Conversion', tagClass: 'tag-info', detail: 'GG: normal 5-alpha reductase type 2 activity. Standard conversion of testosterone to DHT (dihydrotestosterone). DHT drives male pattern baldness, prostate growth, and body hair.' };
+      if (g === 'GC' || g === 'CG') return { tag: 'Reduced DHT', tagClass: 'tag-info', detail: 'GC: reduced 5-alpha reductase activity. Lower DHT production. May have lower risk of male pattern baldness and BPH (benign prostatic hyperplasia). This is what finasteride (Propecia) mimics pharmacologically.' };
+      if (g === 'CC') return { tag: 'Lowest DHT Conversion', tagClass: 'tag-normal', detail: 'CC: most reduced 5-alpha reductase. Lowest DHT levels. Genetically favorable for hair retention and prostate health. Less body/facial hair growth.' };
+      return null;
+    }
+  },
+
+  // ---- CANCER (expanded) ----
+  {
+    id: 'rs2279744', gene: 'MDM2', title: 'MDM2 — p53 Regulator', category: 'cancer', color: 'red',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Normal p53 Regulation', tagClass: 'tag-normal', detail: 'TT: normal MDM2 expression. p53 (the "guardian of the genome") functions normally to suppress tumors.' };
+      if (g === 'TG' || g === 'GT') return { tag: 'Elevated MDM2', tagClass: 'tag-carrier', detail: 'TG: one copy of SNP309. Higher MDM2 expression, which degrades p53 faster. Modestly increased cancer risk across multiple types, particularly in women (breast, endometrial) and in smokers (lung).' };
+      if (g === 'GG') return { tag: 'High MDM2 — Reduced p53', tagClass: 'tag-risk', detail: 'GG: highest MDM2 expression. p53 is degraded more rapidly, weakening tumor suppression. Earlier age of cancer onset in carriers. Especially impactful in combination with TP53 mutations. Avoid carcinogens (smoking, excessive UV, processed meat) where possible.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs16897117', gene: 'CHEK2', title: 'CHEK2 — DNA Damage Response', category: 'cancer', color: 'red',
+    interpret: g => {
+      if (g === 'AA' || g === 'GG') return { tag: 'Normal CHEK2', tagClass: 'tag-normal', detail: 'Reference: normal CHEK2 checkpoint kinase. Properly halts cell division when DNA damage is detected, allowing repair before replication.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'CHEK2 Carrier', tagClass: 'tag-carrier', detail: 'Heterozygous: one CHEK2 variant. Moderately increased risk for breast cancer (~2x), colon cancer, prostate cancer, and thyroid cancer. Not as high-risk as BRCA, but warrants enhanced screening discussions with your doctor.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1800734', gene: 'MLH1', title: 'MLH1 — Lynch Syndrome Proxy', category: 'cancer', color: 'red',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'GG: normal MLH1 promoter. MLH1 is a key mismatch repair gene. When functional, it corrects DNA replication errors. (This is a promoter variant, not a pathogenic Lynch mutation; clinical sequencing needed for Lynch diagnosis.)' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Promoter Variant', tagClass: 'tag-carrier', detail: 'AG: MLH1 promoter variant. Associated with increased risk of colorectal cancer through reduced MLH1 expression and microsatellite instability. Not a Lynch syndrome diagnosis (requires full sequencing), but warrants earlier/more frequent colonoscopy screening.' };
+      if (g === 'AA') return { tag: 'Reduced MLH1 Expression', tagClass: 'tag-risk', detail: 'AA: homozygous promoter variant. Most reduced MLH1 expression. Higher colorectal and endometrial cancer risk. Discuss colonoscopy screening schedule with your doctor (earlier start, shorter intervals).' };
+      return null;
+    }
+  },
+
+  // ---- LONGEVITY ----
+  {
+    id: 'rs2802292', gene: 'FOXO3', title: 'FOXO3 — Longevity Gene', category: 'longevity', color: 'cyan',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Common Variant', tagClass: 'tag-info', detail: 'TT: reference FOXO3 genotype. Standard longevity profile from this locus.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'One Longevity Allele', tagClass: 'tag-normal', detail: 'GT: one copy of the FOXO3 longevity allele. FOXO3 is a transcription factor that activates stress resistance, autophagy, and DNA repair pathways. The G allele is consistently enriched in centenarian populations across Japanese, German, Italian, Chinese, and American cohorts. ~1.5x increased odds of reaching 100.' };
+      if (g === 'GG') return { tag: 'Two Longevity Alleles', tagClass: 'tag-normal', detail: 'GG: homozygous longevity variant. Strongest FOXO3-mediated longevity signal. ~2.7x increased odds of exceptional longevity. FOXO3 upregulates autophagy (cellular cleanup), antioxidant defense (SOD2, catalase), and DNA repair. Fasting, exercise, and caloric restriction activate FOXO3 regardless of genotype.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs3758391', gene: 'SIRT1', title: 'SIRT1 — Sirtuin 1', category: 'longevity', color: 'cyan',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Normal SIRT1', tagClass: 'tag-info', detail: 'TT: reference SIRT1. Normal sirtuin 1 expression. SIRT1 is the "caloric restriction mimetic" gene; it deacetylates proteins involved in metabolism, inflammation, and aging.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Enhanced SIRT1', tagClass: 'tag-normal', detail: 'CT: one variant allele associated with higher SIRT1 expression. Better metabolic flexibility, lower inflammation, improved insulin sensitivity. Responds well to fasting and exercise. Resveratrol activates SIRT1 but evidence is mixed at supplement doses.' };
+      if (g === 'CC') return { tag: 'Highest SIRT1 Expression', tagClass: 'tag-normal', detail: 'CC: highest SIRT1 expression. Associated with longevity, better glucose metabolism, and reduced cardiovascular disease. Your cells may naturally mimic some benefits of caloric restriction.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2542052', gene: 'APOC3', title: 'APOC3 — Triglycerides/Longevity', category: 'longevity', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal APOC3', tagClass: 'tag-info', detail: 'CC: reference. Normal apolipoprotein C-III levels. APOC3 inhibits lipoprotein lipase and increases triglycerides.' };
+      if (g === 'CA' || g === 'AC') return { tag: 'Lower Triglycerides', tagClass: 'tag-normal', detail: 'CA: one protective allele. Reduced APOC3, lower triglycerides. Associated with cardiovascular protection and enriched in centenarian populations (particularly Ashkenazi Jewish longevity studies).' };
+      if (g === 'AA') return { tag: 'Lowest Triglycerides', tagClass: 'tag-normal', detail: 'AA: most reduced APOC3. Lowest triglycerides from this locus. Strong cardiovascular protection. This loss-of-function variant is the basis for volanesorsen (APOC3 antisense drug) used to treat severe hypertriglyceridemia.' };
+      return null;
+    }
+  },
+
+  // ---- SKIN & HAIR (expanded identity) ----
+  {
+    id: 'rs1805007', gene: 'MC1R', title: 'MC1R — Red Hair / Fair Skin', category: 'identity', color: 'orange',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'No R151C Variant', tagClass: 'tag-info', detail: 'CC: no R151C MC1R variant at this position. (MC1R has multiple variants; this tests one of the strongest red-hair alleles.)' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Carrier — Increased Sun Sensitivity', tagClass: 'tag-notable', detail: 'CT: one copy of MC1R R151C. Even without red hair, one copy increases sun sensitivity, freckling, and melanoma risk by ~2x. The MC1R receptor controls the switch between eumelanin (brown/black) and pheomelanin (red/yellow). Sunscreen is especially important.' };
+      if (g === 'TT') return { tag: 'Red Hair / Very Fair Skin', tagClass: 'tag-notable', detail: 'TT: homozygous R151C. Strongly associated with red hair, very fair skin, inability to tan, high freckling, and significantly elevated melanoma/BCC/SCC risk. Your melanocytes produce pheomelanin instead of protective eumelanin. Vigilant sun protection is critical.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1805008', gene: 'MC1R', title: 'MC1R R160W', category: 'identity', color: 'orange',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'No R160W', tagClass: 'tag-info', detail: 'CC: no R160W MC1R variant. Normal melanin switching.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'R160W Carrier', tagClass: 'tag-notable', detail: 'CT: one copy of MC1R R160W. Another "R" (high-penetrance) MC1R variant. Increases sun sensitivity and melanoma risk even as a single copy. If combined with other MC1R variants, red hair/fair skin is very likely.' };
+      if (g === 'TT') return { tag: 'R160W Homozygous', tagClass: 'tag-notable', detail: 'TT: homozygous R160W. Strong red hair and fair skin association. High melanoma risk. Sun protection is essential.' };
+      return null;
+    }
   }
 ];
 
@@ -1855,12 +2325,19 @@ function renderDashboard(data) {
   const categories = [
     { id: 'identity', label: 'Identity & Traits' },
     { id: 'neuro', label: 'Brain & Neuro' },
+    { id: 'mental', label: 'Mental Health' },
     { id: 'health', label: 'Health & Risk' },
+    { id: 'cardiovascular', label: 'Cardiovascular' },
+    { id: 'cancer', label: 'Cancer' },
+    { id: 'autoimmune', label: 'Autoimmune' },
     { id: 'athletic', label: 'Athletic' },
     { id: 'pharma', label: 'Pharmacogenomics' },
     { id: 'inflammation', label: 'Inflammation & Immune' },
     { id: 'nutrition', label: 'Nutrition & Metabolism' },
+    { id: 'detox', label: 'Detox & Antioxidant' },
+    { id: 'hormones', label: 'Hormones' },
     { id: 'sleep', label: 'Sleep & Circadian' },
+    { id: 'longevity', label: 'Longevity' },
     { id: 'aging', label: 'Aging & Misc' }
   ];
 
@@ -2625,6 +3102,203 @@ const SUPPLEMENT_DB = [
         }
       }
     ]
+  },
+  {
+    name: 'Selenium',
+    aliases: ['selenium', 'selenomethionine', 'sodium selenite', 'se'],
+    category: 'Minerals',
+    genes: [
+      { snps: ['rs1050450'], gene: 'GPX1',
+        assess: (all) => {
+          const gpx = all['rs1050450'] || '';
+          if (gpx === 'TT') return { verdict: 'recommended', priority: 8, text: `Lowest GPX1 activity (${gpx}). Glutathione peroxidase is selenium-dependent. <strong>Selenium supplementation directly increases your GPX1 function.</strong> 200 mcg/day from selenomethionine. One Brazil nut per day provides ~70-90 mcg.` };
+          if (gpx === 'CT' || gpx === 'TC') return { verdict: 'beneficial', priority: 5, text: `Reduced GPX1 (${gpx}). Selenium supports your remaining enzyme capacity. 100-200 mcg/day.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal GPX1. Selenium is important for thyroid and immune function. 55-100 mcg/day from diet is usually sufficient.` };
+        }
+      },
+      { snps: ['rs4880'], gene: 'SOD2',
+        assess: (all) => {
+          const sod2 = all['rs4880'] || '';
+          if (sod2 === 'CC') return { verdict: 'beneficial', priority: 4, text: `Reduced SOD2 (Val/Val, ${sod2}). Selenium supports the broader antioxidant network compensating for lower mitochondrial superoxide clearance.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Choline',
+    aliases: ['choline', 'choline bitartrate', 'cdp-choline', 'citicoline', 'alpha-gpc', 'alpha gpc', 'phosphatidylcholine'],
+    category: 'Nootropics',
+    genes: [
+      { snps: ['rs12325817'], gene: 'PEMT',
+        assess: (all) => {
+          const pemt = all['rs12325817'] || '';
+          if (pemt === 'GG') return { verdict: 'recommended', priority: 8, text: `Low PEMT activity (${pemt}). Your endogenous choline production is substantially reduced. <strong>You are highly dependent on dietary choline.</strong> Most people do not meet adequate intake. Supplement with CDP-choline (citicoline) 250-500 mg/day or eat 3+ eggs daily. Choline deficiency causes fatty liver, muscle damage, and cognitive decline.` };
+          if (pemt === 'CG' || pemt === 'GC') return { verdict: 'beneficial', priority: 5, text: `Reduced PEMT (${pemt}). Lower endogenous choline production. Ensure adequate dietary intake or supplement with citicoline 250 mg/day.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal PEMT. Adequate choline from diet (eggs, liver, fish). Citicoline is still a good nootropic for focus and memory.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Retinol (Preformed Vitamin A)',
+    aliases: ['retinol', 'vitamin a', 'retinyl palmitate', 'preformed vitamin a', 'vit a'],
+    category: 'Vitamins',
+    genes: [
+      { snps: ['rs7501331', 'rs12934922'], gene: 'BCMO1',
+        assess: (all) => {
+          const v1 = all['rs7501331'] || '';
+          const v2 = all['rs12934922'] || '';
+          let poor = 0;
+          if (v1 === 'CT' || v1 === 'TC') poor += 1;
+          if (v1 === 'TT') poor += 2;
+          if (v2 === 'AT' || v2 === 'TA') poor += 1;
+          if (v2 === 'TT') poor += 2;
+          if (poor >= 3) return { verdict: 'recommended', priority: 8, text: `Poor beta-carotene converter (BCMO1 ${v1}/${v2}). <strong>You cannot rely on plant sources (carrots, sweet potatoes) for vitamin A.</strong> Preformed retinol from animal sources (liver, eggs, dairy) or supplements (retinyl palmitate 3000-5000 IU) is necessary. Do not exceed 10,000 IU/day unless directed by a doctor.` };
+          if (poor >= 1) return { verdict: 'beneficial', priority: 5, text: `Reduced beta-carotene conversion (BCMO1 ${v1}/${v2}). Include some preformed retinol in your diet. Eggs and dairy provide modest amounts.` };
+          return { verdict: 'neutral', priority: 0, text: `Normal BCMO1. You convert beta-carotene efficiently. Plant sources of vitamin A are fine.` };
+        }
+      }
+    ]
+  },
+  {
+    name: 'Citrulline / Beetroot',
+    aliases: ['citrulline', 'l-citrulline', 'beetroot', 'beet juice', 'nitric oxide', 'arginine', 'l-arginine'],
+    category: 'Performance',
+    genes: [
+      { snps: ['rs1799983'], gene: 'NOS3',
+        assess: (all) => {
+          const nos3 = all['rs1799983'] || '';
+          if (nos3 === 'TT' || nos3 === 'GG') return { verdict: 'recommended', priority: 7, text: `Reduced eNOS / nitric oxide production (NOS3 ${nos3}). <strong>Citrulline (converts to arginine, then NO) and dietary nitrates (beetroot juice) bypass eNOS to boost NO levels.</strong> Improves blood flow, exercise performance, and blood pressure. 6-8g citrulline or 500ml beetroot juice pre-workout.` };
+          if (nos3 === 'GT' || nos3 === 'TG') return { verdict: 'beneficial', priority: 5, text: `Intermediate eNOS (${nos3}). Citrulline and beetroot support NO production. Helpful for exercise performance and blood pressure.` };
+          return { verdict: 'beneficial', priority: 3, text: `Normal eNOS. Citrulline and beetroot still improve exercise performance through NO pathways.` };
+        }
+      },
+      { snps: ['rs1799752'], gene: 'ACE',
+        assess: (all) => {
+          const ace = all['rs1799752'] || '';
+          if (ace === 'DD' || ace === 'GG') return { verdict: 'beneficial', priority: 5, text: `DD ACE genotype (${ace}): higher angiotensin II and vasoconstriction. Citrulline-derived NO counteracts this vasoconstriction. Especially helpful for blood pressure management.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Resveratrol',
+    aliases: ['resveratrol', 'trans-resveratrol', 'pterostilbene'],
+    category: 'Longevity',
+    genes: [
+      { snps: ['rs3758391'], gene: 'SIRT1',
+        assess: (all) => {
+          const sirt1 = all['rs3758391'] || '';
+          if (sirt1 === 'TT') return { verdict: 'beneficial', priority: 5, text: `Normal SIRT1 expression (${sirt1}). Resveratrol activates SIRT1, potentially mimicking caloric restriction benefits. May be more impactful for you since your baseline SIRT1 is not already elevated. 150-500 mg/day. Evidence is stronger in animal models than humans.` };
+          if (sirt1 === 'CT' || sirt1 === 'TC' || sirt1 === 'CC') return { verdict: 'neutral', priority: 2, text: `Enhanced SIRT1 expression (${sirt1}). You already have elevated SIRT1 activity. Resveratrol adds modest additional activation. Lower priority than for TT carriers.` };
+          return { verdict: 'neutral', priority: 2, text: `Resveratrol is a SIRT1 activator with anti-inflammatory and antioxidant properties. Evidence is mixed at supplement doses.` };
+        }
+      },
+      { snps: ['rs2802292'], gene: 'FOXO3',
+        assess: (all) => {
+          const foxo3 = all['rs2802292'] || '';
+          if (foxo3 === 'TT') return { verdict: 'beneficial', priority: 4, text: `Reference FOXO3 (${foxo3}). Resveratrol indirectly activates FOXO3 through SIRT1-mediated deacetylation. May help compensate for not carrying the longevity allele.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Sulforaphane (Broccoli Extract)',
+    aliases: ['sulforaphane', 'broccoli extract', 'broccoli sprout', 'cruciferous', 'nrf2'],
+    category: 'Detox',
+    genes: [
+      { snps: ['rs1695'], gene: 'GSTP1',
+        assess: (all) => {
+          const gstp1 = all['rs1695'] || '';
+          if (gstp1 === 'GG') return { verdict: 'recommended', priority: 8, text: `Low GSTP1 activity (Val/Val, ${gstp1}). <strong>Sulforaphane is one of the most potent natural inducers of Phase II detox enzymes</strong> (including other glutathione transferases). It activates Nrf2, your master antioxidant switch, upregulating dozens of detox genes to compensate for your reduced GSTP1. Broccoli sprout extract or fresh sprouts daily.` };
+          if (gstp1 === 'AG' || gstp1 === 'GA') return { verdict: 'recommended', priority: 6, text: `Reduced GSTP1 (Ile/Val, ${gstp1}). Sulforaphane upregulates compensatory detox pathways through Nrf2 activation. Especially valuable for your genotype.` };
+          return { verdict: 'beneficial', priority: 3, text: `Normal GSTP1. Sulforaphane is still a powerful Nrf2 activator with anti-cancer and detox benefits for everyone.` };
+        }
+      },
+      { snps: ['rs1800566'], gene: 'NQO1',
+        assess: (all) => {
+          const nqo1 = all['rs1800566'] || '';
+          if (nqo1 === 'TT') return { verdict: 'recommended', priority: 7, text: `No NQO1 activity (${nqo1}). Sulforaphane strongly induces NQO1 through Nrf2. While your NQO1 protein is unstable, maximizing expression through Nrf2 activation may provide some residual function.` };
+          if (nqo1 === 'CT' || nqo1 === 'TC') return { verdict: 'beneficial', priority: 5, text: `Reduced NQO1 (${nqo1}). Sulforaphane's Nrf2 activation helps maximize your remaining NQO1 capacity.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Tryptophan / 5-HTP',
+    aliases: ['tryptophan', 'l-tryptophan', '5-htp', '5htp', '5-hydroxytryptophan'],
+    category: 'Mental Health',
+    genes: [
+      { snps: ['rs4570625'], gene: 'TPH2',
+        assess: (all) => {
+          const tph2 = all['rs4570625'] || '';
+          if (tph2 === 'TT') return { verdict: 'recommended', priority: 7, text: `Lowest TPH2 activity (${tph2}). Reduced brain serotonin synthesis. <strong>Tryptophan (serotonin precursor) or 5-HTP (bypasses the rate-limiting step) can directly increase substrate availability.</strong> 5-HTP: 50-100 mg/day. Do NOT combine with SSRIs (serotonin syndrome risk).` };
+          if (tph2 === 'GT' || tph2 === 'TG') return { verdict: 'beneficial', priority: 5, text: `Mildly reduced TPH2 (${tph2}). Tryptophan-rich foods (turkey, eggs, cheese) or low-dose 5-HTP may support serotonin levels. Do not combine with SSRIs.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal TPH2. Standard serotonin synthesis. Tryptophan from diet is sufficient.` };
+        }
+      },
+      { snps: ['rs25531'], gene: 'SLC6A4',
+        assess: (all) => {
+          const sert = all['rs25531'] || '';
+          if (sert === 'GG' || sert === 'CC') return { verdict: 'beneficial', priority: 4, text: `Short/Short serotonin transporter (${sert}). Lower serotonin reuptake. Increasing serotonin availability through tryptophan/5-HTP may help, but monitor carefully as the system is already sensitized.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Niacin (Vitamin B3 / NMN / NR)',
+    aliases: ['niacin', 'vitamin b3', 'b3', 'nicotinamide', 'nmn', 'nicotinamide mononucleotide', 'nr', 'nicotinamide riboside', 'nad+', 'nad'],
+    category: 'Longevity',
+    genes: [
+      { snps: ['rs3758391'], gene: 'SIRT1',
+        assess: (all) => {
+          const sirt1 = all['rs3758391'] || '';
+          if (sirt1 === 'CT' || sirt1 === 'TC' || sirt1 === 'CC') return { verdict: 'beneficial', priority: 5, text: `Enhanced SIRT1 (${sirt1}). SIRT1 consumes NAD+ as a cofactor. Higher SIRT1 activity means higher NAD+ demand. <strong>NMN or NR supplementation ensures your elevated SIRT1 has adequate NAD+ fuel.</strong> 250-500 mg NMN or NR daily.` };
+          return { verdict: 'beneficial', priority: 3, text: `Normal SIRT1. NAD+ precursors (NMN, NR) support cellular energy, DNA repair, and sirtuin activity. NAD+ declines ~50% between ages 40-60. Supplementation helps maintain levels.` };
+        }
+      },
+      { snps: ['rs10936599'], gene: 'TERT',
+        assess: (all) => {
+          const tert = all['rs10936599'] || '';
+          if (tert === 'TT' || tert === 'CT' || tert === 'TC') return { verdict: 'beneficial', priority: 4, text: `Shorter telomere genotype (TERT ${tert}). NAD+ supports PARP1 (DNA repair) and sirtuins, both of which protect telomeres from accelerated shortening.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
+    name: 'Sunscreen / UV Protection',
+    aliases: ['sunscreen', 'spf', 'uv protection', 'sun protection'],
+    category: 'Skin Health',
+    genes: [
+      { snps: ['rs1805007'], gene: 'MC1R R151C',
+        assess: (all) => {
+          const mc1r = all['rs1805007'] || '';
+          if (mc1r === 'TT') return { verdict: 'recommended', priority: 10, text: `Homozygous MC1R R151C (${mc1r}). Very fair skin, inability to tan, high melanoma risk. <strong>Daily SPF 30+ sunscreen is essential, even on cloudy days.</strong> Your melanocytes produce pheomelanin (no UV protection) instead of eumelanin (protective). Annual dermatologist skin checks strongly recommended.` };
+          if (mc1r === 'CT' || mc1r === 'TC') return { verdict: 'recommended', priority: 7, text: `MC1R R151C carrier (${mc1r}). Increased sun sensitivity and ~2x melanoma risk even without red hair. SPF 30+ daily, especially face and forearms. Regular mole checks.` };
+          return null;
+        }
+      },
+      { snps: ['rs1805008'], gene: 'MC1R R160W',
+        assess: (all) => {
+          const mc1r2 = all['rs1805008'] || '';
+          if (mc1r2 === 'CT' || mc1r2 === 'TC' || mc1r2 === 'TT') return { verdict: 'recommended', priority: 7, text: `MC1R R160W variant (${mc1r2}). Additional sun sensitivity factor. Compounds melanoma risk if combined with other MC1R variants. Consistent sunscreen use recommended.` };
+          return null;
+        }
+      },
+      { snps: ['rs12203592'], gene: 'IRF4',
+        assess: (all) => {
+          const irf4 = all['rs12203592'] || '';
+          if (irf4 === 'CT' || irf4 === 'TC' || irf4 === 'TT') return { verdict: 'beneficial', priority: 4, text: `IRF4 freckling variant (${irf4}). Increased sun sensitivity and skin cancer susceptibility. Sunscreen protects against both UV damage and freckling.` };
+          return null;
+        }
+      }
+    ]
   }
 ];
 
@@ -3027,7 +3701,29 @@ function handleFile(file) {
         const neededIds = new Set();
         SNP_DB.forEach(s => { neededIds.add(s.id); if (s.multi) s.multi.forEach(m => neededIds.add(m)); });
         // Also store some extras used in charts/summaries
-        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131','rs601338','rs1800629','rs671','rs4988235','rs762551','rs9923231','rs1815739','rs1801260','rs10936599','rs2187668','rs1800562','rs1800407','rs12896399','rs16891982','rs1393350'].forEach(id => neededIds.add(id));
+        // Core SNPs for charts, summaries, and supplement analyzer
+        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131','rs601338','rs1800629','rs671','rs4988235','rs762551','rs9923231','rs1815739','rs1801260','rs10936599','rs2187668','rs1800562','rs1800407','rs12896399','rs16891982','rs1393350',
+        // Pharma expanded
+        'rs4244285','rs12248560','rs1065852','rs1799853','rs1057910','rs776746','rs3918290','rs887829','rs2032582','rs4986893',
+        // Cardiovascular
+        'rs1333049','rs10455872','rs1800896','rs1799752','rs5186','rs708272','rs1799983',
+        // Mental health
+        'rs25531','rs1360780','rs6323','rs6295','rs4570625',
+        // Autoimmune
+        'rs13202464','rs2476601','rs3087243',
+        // Detox
+        'rs4880','rs1695','rs1800566','rs1050450','rs1056806',
+        // Nutrigenomics
+        'rs7501331','rs12934922','rs2228570','rs2282679','rs12325817','rs33972313','rs602662',
+        // Hormones
+        'rs6152','rs2234693','rs700518','rs523349',
+        // Cancer
+        'rs2279744','rs16897117','rs1800734',
+        // Longevity
+        'rs2802292','rs3758391','rs2542052',
+        // Identity expanded
+        'rs1805007','rs1805008'
+        ].forEach(id => neededIds.add(id));
         for (const id of neededIds) {
           if (data.snps[id]) cacheData.snps[id] = data.snps[id];
         }
