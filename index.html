@@ -1648,6 +1648,176 @@ const SNP_DB = [
     }
   },
 
+  // ---- PHARMACOGENOMICS (wave 2) ----
+  {
+    id: 'rs3745274', gene: 'CYP2B6', title: 'CYP2B6 \u2014 Efavirenz/Bupropion', category: 'pharma', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Metabolizer', tagClass: 'tag-normal', detail: 'GG (*1/*1): normal CYP2B6 activity. Standard metabolism of efavirenz (HIV), bupropion (depression/smoking cessation), cyclophosphamide (chemo), methadone, and ketamine.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Intermediate (*1/*6)', tagClass: 'tag-carrier', detail: 'GT: intermediate CYP2B6 activity. Efavirenz levels 40-75% higher; increased CNS side effects (vivid dreams, dizziness). Lower bupropion activation. Consider efavirenz dose reduction or switch to dolutegravir.' };
+      if (g === 'TT') return { tag: 'Poor Metabolizer (*6/*6)', tagClass: 'tag-risk', detail: 'TT: severely reduced CYP2B6. Efavirenz levels 3-4x higher than normal (high toxicity risk). Bupropion poorly activated. Methadone clearance impaired. ~6% of Africans, ~3% of Europeans. Dose reductions or alternative drugs needed.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1799930', gene: 'NAT2', title: 'NAT2 \u2014 Acetylator Status', category: 'pharma', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Rapid Acetylator', tagClass: 'tag-normal', detail: 'GG: normal NAT2 activity. Fast acetylation of isoniazid (TB), hydralazine (blood pressure), sulfonamide antibiotics, caffeine, and aromatic amine carcinogens. Standard drug dosing.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Intermediate Acetylator', tagClass: 'tag-carrier', detail: 'AG: intermediate NAT2 activity. One slow-acetylator allele. Drug levels modestly higher for isoniazid and hydralazine. Monitor for side effects.' };
+      if (g === 'AA') return { tag: 'Slow Acetylator', tagClass: 'tag-risk', detail: 'AA: slow acetylator (~50-70% of Europeans). Isoniazid accumulates, increasing hepatotoxicity and peripheral neuropathy risk. Hydralazine causes lupus-like syndrome risk. Slow acetylators also clear aromatic amine carcinogens slower.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1142345', gene: 'TPMT', title: 'TPMT \u2014 Thiopurine Toxicity', category: 'pharma', color: 'red',
+    interpret: g => {
+      if (g === 'AA' || g === 'CC') return { tag: 'Normal TPMT', tagClass: 'tag-normal', detail: 'Reference: normal thiopurine methyltransferase. Standard doses of azathioprine (Imuran), 6-mercaptopurine, and 6-thioguanine are safe.' };
+      if (g === 'AG' || g === 'GA' || g === 'AC' || g === 'CA') return { tag: 'Intermediate TPMT', tagClass: 'tag-carrier', detail: 'Heterozygous: intermediate TPMT activity. Thiopurine dose reduction to 30-70% recommended. Without adjustment, bone marrow suppression (low WBC) can occur. ~10% of people carry one variant.' };
+      if (g === 'GG') return { tag: 'Deficient TPMT', tagClass: 'tag-risk', detail: 'Homozygous variant: very low or absent TPMT. Standard thiopurine doses are LETHAL (severe pancytopenia). Dose must be reduced to 10% or alternative therapy used. ~0.3% of people. Critical pharmacogenomic result.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1801272', gene: 'CYP2A6', title: 'CYP2A6 \u2014 Nicotine Metabolism', category: 'pharma', color: 'green',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Normal Metabolizer', tagClass: 'tag-normal', detail: 'AA (*1/*1): normal CYP2A6. Efficient nicotine metabolism. Smokers with this genotype tend to smoke more cigarettes to maintain nicotine levels.' };
+      if (g === 'AT' || g === 'TA') return { tag: 'Intermediate (*1/*2)', tagClass: 'tag-carrier', detail: 'AT: reduced CYP2A6 activity. Slower nicotine metabolism. Tend to smoke fewer cigarettes. Nicotine patches may be too strong at standard doses.' };
+      if (g === 'TT') return { tag: 'Poor Metabolizer', tagClass: 'tag-notable', detail: 'TT: very low CYP2A6 activity. Very slow nicotine clearance. Smoke significantly fewer cigarettes and find it easier to quit. Lower lung cancer risk per cigarette.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs12979860', gene: 'IFNL3/IL28B', title: 'IL28B \u2014 Hepatitis C Response', category: 'pharma', color: 'blue',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Favorable Response', tagClass: 'tag-normal', detail: 'CC: best predictor of hepatitis C spontaneous clearance and treatment response. 2-3x more likely to clear HCV spontaneously. With modern DAAs, genotype matters less but CC still predicts faster clearance.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate', tagClass: 'tag-carrier', detail: 'CT: intermediate HCV clearance and treatment response.' };
+      if (g === 'TT') return { tag: 'Unfavorable Response', tagClass: 'tag-risk', detail: 'TT: poorest HCV spontaneous clearance. With modern DAAs cure rates still >95%, but treatment duration may need to be longer.' };
+      return null;
+    }
+  },
+
+  // ---- LIPID METABOLISM ----
+  {
+    id: 'rs11591147', gene: 'PCSK9', title: 'PCSK9 \u2014 LDL Cholesterol', category: 'cardiovascular', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal PCSK9', tagClass: 'tag-info', detail: 'GG: normal PCSK9 function. PCSK9 degrades LDL receptors, reducing LDL clearance. PCSK9 inhibitor drugs (evolocumab, alirocumab) target this protein.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Lower LDL (Protective)', tagClass: 'tag-normal', detail: 'GT: one loss-of-function PCSK9 allele. ~15-28% lower LDL cholesterol. ~47-88% reduced coronary heart disease risk. This is the natural version of PCSK9 inhibitor drugs.' };
+      if (g === 'TT') return { tag: 'Lowest LDL', tagClass: 'tag-normal', detail: 'TT: homozygous PCSK9 loss-of-function. Very low LDL. Strong cardiovascular protection. The discovery of these natural variants led to PCSK9 inhibitor development.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs12916', gene: 'HMGCR', title: 'HMGCR \u2014 Statin Target', category: 'cardiovascular', color: 'blue',
+    interpret: g => {
+      if (g === 'CC' || g === 'TT') return { tag: 'Normal HMG-CoA Reductase', tagClass: 'tag-info', detail: 'Reference: normal HMGCR expression. HMGCR is the enzyme that statins inhibit.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Naturally Lower Cholesterol', tagClass: 'tag-normal', detail: 'CT: ~2-3% lower LDL per allele. Mimics a mild statin effect. Predicts better response to statin therapy.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs6511720', gene: 'LDLR', title: 'LDLR \u2014 LDL Receptor', category: 'cardiovascular', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal LDL Receptor', tagClass: 'tag-info', detail: 'GG: normal LDL receptor expression. Standard LDL clearance. (Not the same as rare pathogenic LDLR mutations causing familial hypercholesterolemia.)' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Enhanced LDL Clearance', tagClass: 'tag-normal', detail: 'GT: higher LDLR expression. ~5-7 mg/dL lower LDL. Better cardiovascular profile.' };
+      if (g === 'TT') return { tag: 'Most Enhanced Clearance', tagClass: 'tag-normal', detail: 'TT: highest LDLR expression variant. Lowest LDL from this locus.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs12740374', gene: 'SORT1/CELSR2', title: 'Sortilin \u2014 LDL & Liver', category: 'cardiovascular', color: 'blue',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal', tagClass: 'tag-info', detail: 'GG: normal hepatic VLDL secretion and LDL levels.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Lower LDL', tagClass: 'tag-normal', detail: 'GT: increased liver SORT1 expression, reducing hepatic VLDL secretion. ~5-8 mg/dL lower LDL. Strongest common LDL locus after LDLR.' };
+      if (g === 'TT') return { tag: 'Lowest LDL', tagClass: 'tag-normal', detail: 'TT: highest SORT1 expression. Most reduced VLDL secretion. Significantly lower LDL.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs964184', gene: 'APOA5/ZNF259', title: 'APOA5 \u2014 Triglycerides', category: 'cardiovascular', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Triglycerides', tagClass: 'tag-normal', detail: 'CC: normal triglyceride metabolism.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'Higher Triglycerides', tagClass: 'tag-carrier', detail: 'CG: triglycerides ~15-20% higher. Increased VLDL. Omega-3, exercise, and limiting refined carbs/alcohol help most.' };
+      if (g === 'GG') return { tag: 'Highest Triglycerides', tagClass: 'tag-risk', detail: 'GG: significantly elevated triglycerides. Risk for pancreatitis if >500 mg/dL. Strong response to omega-3 (2-4g EPA/DHA), fibrates, and carb restriction.' };
+      return null;
+    }
+  },
+
+  // ---- ADDICTION & PAIN ----
+  {
+    id: 'rs1229984', gene: 'ADH1B', title: 'ADH1B \u2014 Alcohol Metabolism Speed', category: 'mental', color: 'green',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Normal Metabolism', tagClass: 'tag-info', detail: 'Reference: normal alcohol dehydrogenase speed. Most common in Europeans.' };
+      if (g === 'CT' || g === 'TC' || g === 'AG' || g === 'GA') return { tag: 'Fast Metabolism (Protective)', tagClass: 'tag-normal', detail: 'One fast ADH1B*2 allele. Converts alcohol to acetaldehyde ~40x faster, causing flushing/nausea. Strongly protective against alcoholism (~5x reduced risk). Common in East Asians.' };
+      if (g === 'TT' || g === 'AA') return { tag: 'Ultrafast \u2014 Strong Protection', tagClass: 'tag-normal', detail: 'Homozygous fast ADH1B. Alcohol converted to acetaldehyde extremely rapidly. Virtually no alcoholism risk from this gene.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs16969968', gene: 'CHRNA5', title: 'CHRNA5 \u2014 Nicotine Dependence', category: 'mental', color: 'red',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Lower Risk', tagClass: 'tag-normal', detail: 'GG: reference CHRNA5. Normal nicotinic receptor. Lower baseline nicotine dependence risk.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Moderate Risk', tagClass: 'tag-carrier', detail: 'AG: one D398N risk allele. Altered nicotinic receptor in the habenula. Reduced aversion to nicotine, easier to escalate use. ~1.3x increased heavy smoking and lung cancer risk.' };
+      if (g === 'AA') return { tag: 'High Dependence Risk', tagClass: 'tag-risk', detail: 'AA: homozygous D398N. Strongest genetic risk factor for nicotine dependence. ~2x heavy smoking risk, ~1.8x lung cancer risk. Varenicline (Chantix) may be particularly effective for this genotype.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs6746030', gene: 'SCN9A', title: 'SCN9A \u2014 Pain Sensitivity', category: 'pharma', color: 'red',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal Pain Sensitivity', tagClass: 'tag-normal', detail: 'GG: normal Nav1.7 sodium channel. Standard pain perception. SCN9A is the most important gene for pain; rare mutations cause inability to feel pain or extreme pain disorders.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Increased Pain', tagClass: 'tag-carrier', detail: 'AG: increased Nav1.7 activity. May perceive pain more intensely. May need higher analgesic doses.' };
+      if (g === 'AA') return { tag: 'High Pain Sensitivity', tagClass: 'tag-risk', detail: 'AA: significantly increased pain sensitivity. Nav1.7 fires more easily. Higher chronic pain risk. SCN9A is a major target for novel non-opioid analgesics in development.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs8065080', gene: 'TRPV1', title: 'TRPV1 \u2014 Heat/Capsaicin Pain', category: 'pharma', color: 'orange',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Heat/Spice Sensitivity', tagClass: 'tag-info', detail: 'CC: normal TRPV1. Standard sensitivity to heat, capsaicin, and inflammatory pain.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Reduced Sensitivity', tagClass: 'tag-info', detail: 'CT: mildly reduced TRPV1 sensitivity. Better spicy food and heat tolerance.' };
+      if (g === 'TT') return { tag: 'Lower Heat/Spice Sensitivity', tagClass: 'tag-normal', detail: 'TT: reduced TRPV1 activity. Lower capsaicin, heat, and inflammatory pain sensitivity. You likely handle spicy food well.' };
+      return null;
+    }
+  },
+
+  // ---- NUTRIGENOMICS (wave 2) ----
+  {
+    id: 'rs174547', gene: 'FADS1', title: 'FADS1 \u2014 Omega-3/6 Conversion', category: 'nutrition', color: 'orange',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Efficient Converter', tagClass: 'tag-normal', detail: 'CC: high FADS1 desaturase activity. Efficiently converts plant omega-3 (ALA) to EPA/DHA. Also produces more arachidonic acid (pro-inflammatory). Balance omega-6 intake.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Intermediate', tagClass: 'tag-carrier', detail: 'CT: intermediate FADS1. Pre-formed EPA/DHA from fish/algae oil is more reliable than flaxseed.' };
+      if (g === 'TT') return { tag: 'Poor Converter', tagClass: 'tag-risk', detail: 'TT: low FADS1 activity. Cannot efficiently convert plant ALA to EPA/DHA. Flaxseed provides minimal usable omega-3. Direct EPA/DHA supplementation (fish/algae oil) is important.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1805313', gene: 'TCN2', title: 'TCN2 \u2014 B12 Transport', category: 'nutrition', color: 'blue',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Normal B12 Transport', tagClass: 'tag-normal', detail: 'Reference: normal transcobalamin II. Efficient B12 delivery into cells.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'Reduced Transport', tagClass: 'tag-carrier', detail: 'Heterozygous: mildly reduced holotranscobalamin. Cells receive less B12 even if serum B12 appears normal. Check holotranscobalamin (active B12) rather than total B12.' };
+      return null;
+    }
+  },
+
+  // ---- FERTILITY & REPRODUCTION ----
+  {
+    id: 'rs6166', gene: 'FSHR', title: 'FSH Receptor \u2014 Ovarian Response', category: 'hormones', color: 'pink',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Asn/Asn \u2014 Good Response', tagClass: 'tag-normal', detail: 'AA (Asn680): higher FSH receptor sensitivity. Better ovarian response in IVF. Associated with slightly higher ovarian reserve.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Asn/Ser \u2014 Intermediate', tagClass: 'tag-info', detail: 'AG: intermediate FSH receptor sensitivity. Standard IVF response.' };
+      if (g === 'GG') return { tag: 'Ser/Ser \u2014 Reduced Response', tagClass: 'tag-carrier', detail: 'GG (Ser680): reduced FSH receptor sensitivity. May need higher gonadotropin doses in IVF. Does not affect natural fertility significantly.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs10830963', gene: 'MTNR1B', title: 'Melatonin Receptor \u2014 Glucose', category: 'nutrition', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'CC: normal melatonin receptor 1B. Standard nighttime insulin secretion.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'CG: increased MTNR1B expression. Melatonin more strongly suppresses insulin at night. Higher fasting glucose and gestational diabetes risk. Avoid eating late at night.' };
+      if (g === 'GG') return { tag: 'Elevated Glucose Risk', tagClass: 'tag-risk', detail: 'GG: highest MTNR1B expression. Strongest melatonin-mediated insulin suppression. Significantly higher fasting glucose and T2D risk. Time-restricted eating (finish meals well before bed) is particularly beneficial.' };
+      return null;
+    }
+  },
+
   // ---- CARDIOVASCULAR ----
   {
     id: 'rs1333049', gene: '9p21/CDKN2A/B', title: '9p21 — Heart Attack Risk', category: 'cardiovascular', color: 'red',
@@ -2705,6 +2875,14 @@ const SUPPLEMENT_DB = [
           if (bdnf === 'CT' || bdnf === 'TC' || bdnf === 'TT') return { verdict: 'beneficial', priority: 5, text: `Reduced BDNF secretion (${bdnf}). DHA is a structural component of neuronal membranes and supports BDNF expression. Particularly valuable alongside exercise for neuroplasticity.` };
           return null;
         }
+      },
+      { snps: ['rs174547'], gene: 'FADS1',
+        assess: (all) => {
+          const fads1 = all['rs174547'] || '';
+          if (fads1 === 'TT') return { verdict: 'recommended', priority: 8, text: `Poor omega-3/6 converter (FADS1 ${fads1}). <strong>You cannot efficiently convert plant ALA (flax, chia) to EPA/DHA.</strong> Pre-formed EPA/DHA from fish oil or algae oil is essential, not optional. Do not rely on plant omega-3 sources.` };
+          if (fads1 === 'CT' || fads1 === 'TC') return { verdict: 'beneficial', priority: 5, text: `Intermediate FADS1 (${fads1}). Plant omega-3 conversion is reduced. Pre-formed EPA/DHA is more reliable than flaxseed for you.` };
+          return null;
+        }
       }
     ]
   },
@@ -3272,6 +3450,28 @@ const SUPPLEMENT_DB = [
     ]
   },
   {
+    name: 'Niacin (Flush Form)',
+    aliases: ['niacin flush', 'nicotinic acid', 'flush niacin', 'vitamin b3 niacin'],
+    category: 'Cardiovascular',
+    genes: [
+      { snps: ['rs964184'], gene: 'APOA5',
+        assess: (all) => {
+          const apoa5 = all['rs964184'] || '';
+          if (apoa5 === 'GG') return { verdict: 'recommended', priority: 8, text: `Highest triglycerides genotype (APOA5 ${apoa5}). <strong>Niacin (nicotinic acid) is one of the most effective triglyceride-lowering agents.</strong> Reduces TG by 20-50% and raises HDL by 15-35%. 500-2000 mg/day (titrate up slowly to manage flushing). Discuss with doctor.` };
+          if (apoa5 === 'CG' || apoa5 === 'GC') return { verdict: 'beneficial', priority: 5, text: `Elevated triglycerides genotype (APOA5 ${apoa5}). Niacin can help normalize triglycerides alongside diet changes.` };
+          return { verdict: 'neutral', priority: 1, text: `Normal triglycerides. Niacin is less necessary but still raises HDL effectively.` };
+        }
+      },
+      { snps: ['rs708272'], gene: 'CETP',
+        assess: (all) => {
+          const cetp = all['rs708272'] || '';
+          if (cetp === 'GG') return { verdict: 'beneficial', priority: 5, text: `Lower HDL genotype (CETP ${cetp}). Niacin is the most effective HDL-raising agent and may be particularly valuable for you.` };
+          return null;
+        }
+      }
+    ]
+  },
+  {
     name: 'Sunscreen / UV Protection',
     aliases: ['sunscreen', 'spf', 'uv protection', 'sun protection'],
     category: 'Skin Health',
@@ -3705,8 +3905,11 @@ function handleFile(file) {
         ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131','rs601338','rs1800629','rs671','rs4988235','rs762551','rs9923231','rs1815739','rs1801260','rs10936599','rs2187668','rs1800562','rs1800407','rs12896399','rs16891982','rs1393350',
         // Pharma expanded
         'rs4244285','rs12248560','rs1065852','rs1799853','rs1057910','rs776746','rs3918290','rs887829','rs2032582','rs4986893',
+        'rs3745274','rs1799930','rs1142345','rs1801272','rs12979860','rs6746030','rs8065080',
         // Cardiovascular
         'rs1333049','rs10455872','rs1800896','rs1799752','rs5186','rs708272','rs1799983',
+        'rs11591147','rs12916','rs6511720','rs12740374','rs964184',
+        'rs1229984','rs16969968',
         // Mental health
         'rs25531','rs1360780','rs6323','rs6295','rs4570625',
         // Autoimmune
@@ -3715,8 +3918,9 @@ function handleFile(file) {
         'rs4880','rs1695','rs1800566','rs1050450','rs1056806',
         // Nutrigenomics
         'rs7501331','rs12934922','rs2228570','rs2282679','rs12325817','rs33972313','rs602662',
+        'rs174547','rs1805313','rs10830963',
         // Hormones
-        'rs6152','rs2234693','rs700518','rs523349',
+        'rs6152','rs2234693','rs700518','rs523349','rs6166',
         // Cancer
         'rs2279744','rs16897117','rs1800734',
         // Longevity
