@@ -2143,6 +2143,64 @@ const SNP_DB = [
     }
   },
 
+  // ---- AUTOIMMUNE (wave 2) ----
+  {
+    id: 'rs7574865', gene: 'STAT4', title: 'STAT4 \u2014 Lupus / RA Risk', category: 'autoimmune', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'GG: reference STAT4. Normal signal transducer and activator of transcription 4 function. Standard interferon and IL-12 signaling.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'GT: one STAT4 risk allele. ~1.5x increased risk for systemic lupus erythematosus (SLE) and rheumatoid arthritis. STAT4 mediates Th1 immune responses; the variant causes excessive interferon signaling.' };
+      if (g === 'TT') return { tag: 'Two Risk Alleles', tagClass: 'tag-risk', detail: 'TT: homozygous STAT4 risk. ~2x increased lupus risk. Also elevates RA, Sjogren syndrome, and primary biliary cholangitis risk. Anti-inflammatory lifestyle especially important.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2004640', gene: 'IRF5', title: 'IRF5 \u2014 Lupus / Interferon', category: 'autoimmune', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'GG: reference IRF5 (interferon regulatory factor 5). Normal type I interferon response.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'GT: one IRF5 variant. Higher IRF5 expression, increased type I interferon production. ~1.5x SLE risk. Also associated with Sjogren syndrome and inflammatory bowel disease.' };
+      if (g === 'TT') return { tag: 'Two Risk Alleles', tagClass: 'tag-risk', detail: 'TT: homozygous IRF5 variant. Highest type I interferon production. ~2x lupus risk. Anifrolumab (Saphnelo), which blocks interferon, targets this exact pathway.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs2200733', gene: '4q25/PITX2', title: 'Atrial Fibrillation Risk', category: 'cardiovascular', color: 'red',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Lower AF Risk', tagClass: 'tag-normal', detail: 'CC: reference at 4q25 locus. Lower atrial fibrillation risk. This is the strongest common genetic predictor of AF.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Moderate AF Risk (~1.7x)', tagClass: 'tag-carrier', detail: 'CT: one risk allele. ~1.7x increased atrial fibrillation risk. PITX2 controls left atrial development; the variant disrupts normal atrial electrical patterning. Watch for irregular heartbeat symptoms.' };
+      if (g === 'TT') return { tag: 'High AF Risk (~2.7x)', tagClass: 'tag-risk', detail: 'TT: homozygous risk. ~2.7x AF risk. Maintain healthy weight, limit alcohol and caffeine, manage sleep apnea if present. These modifiable factors interact with genetic risk.' };
+      return null;
+    }
+  },
+
+  // ---- DNA REPAIR & SKIN CANCER ----
+  {
+    id: 'rs2228001', gene: 'XPC', title: 'XPC \u2014 DNA Repair / Skin Cancer', category: 'cancer', color: 'yellow',
+    interpret: g => {
+      if (g === 'AA') return { tag: 'Normal DNA Repair', tagClass: 'tag-normal', detail: 'AA: normal XPC (xeroderma pigmentosum complementation group C). Efficient nucleotide excision repair of UV-induced DNA damage and bulky adducts.' };
+      if (g === 'AC' || g === 'CA') return { tag: 'Mildly Reduced Repair', tagClass: 'tag-carrier', detail: 'AC: one variant allele. Slightly reduced NER efficiency. Modestly increased skin cancer risk with UV exposure. Sun protection is more important for you.' };
+      if (g === 'CC') return { tag: 'Reduced DNA Repair', tagClass: 'tag-risk', detail: 'CC: reduced XPC function. Impaired repair of UV-induced DNA damage. Higher risk of basal cell carcinoma, squamous cell carcinoma, and melanoma. Sunscreen, sun avoidance, and regular skin checks are especially important.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs4646903', gene: 'CYP1A1', title: 'CYP1A1 \u2014 Xenobiotic Metabolism', category: 'detox', color: 'yellow',
+    interpret: g => {
+      if (g === 'TT') return { tag: 'Normal CYP1A1', tagClass: 'tag-normal', detail: 'TT: reference CYP1A1 activity. Standard Phase I metabolism of polycyclic aromatic hydrocarbons (PAHs from grilled/smoked food, cigarette smoke, air pollution).' };
+      if (g === 'TC' || g === 'CT') return { tag: 'Higher Inducibility', tagClass: 'tag-carrier', detail: 'TC: one variant allele. CYP1A1 more easily induced by PAH exposure. Generates more reactive intermediates from smoke/pollution, increasing DNA damage risk. Cruciferous vegetables and adequate glutathione help neutralize these intermediates.' };
+      if (g === 'CC') return { tag: 'Highest Inducibility', tagClass: 'tag-risk', detail: 'CC: most inducible CYP1A1. Generates the most reactive metabolites from environmental carcinogens. Smokers with this genotype have significantly higher lung cancer risk. Avoid grilled/charred meats and cigarette smoke. Broccoli sprouts (sulforaphane) upregulate Phase II detox to compensate.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1799945', gene: 'HFE (H63D)', title: 'HFE H63D \u2014 Iron Metabolism', category: 'health', color: 'yellow',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'CC: no H63D variant. Normal HFE-mediated iron regulation.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'H63D Carrier', tagClass: 'tag-carrier', detail: 'CG: one H63D allele. Mildly increased iron absorption. Usually clinically silent alone, but compound heterozygosity (H63D + C282Y) can cause mild hemochromatosis. Check ferritin if combined with C282Y at rs1800562.' };
+      if (g === 'GG') return { tag: 'H63D Homozygous', tagClass: 'tag-carrier', detail: 'GG: homozygous H63D. Moderately increased iron absorption. Most H63D homozygotes do NOT develop clinical hemochromatosis, but ferritin should be monitored. Avoid iron supplements unless deficient.' };
+      return null;
+    }
+  },
+
   // ---- LONGEVITY ----
   {
     id: 'rs2802292', gene: 'FOXO3', title: 'FOXO3 — Longevity Gene', category: 'longevity', color: 'cyan',
@@ -3913,7 +3971,7 @@ function handleFile(file) {
         // Mental health
         'rs25531','rs1360780','rs6323','rs6295','rs4570625',
         // Autoimmune
-        'rs13202464','rs2476601','rs3087243',
+        'rs13202464','rs2476601','rs3087243','rs7574865','rs2004640',
         // Detox
         'rs4880','rs1695','rs1800566','rs1050450','rs1056806',
         // Nutrigenomics
@@ -3921,8 +3979,12 @@ function handleFile(file) {
         'rs174547','rs1805313','rs10830963',
         // Hormones
         'rs6152','rs2234693','rs700518','rs523349','rs6166',
-        // Cancer
-        'rs2279744','rs16897117','rs1800734',
+        // Cancer + DNA repair
+        'rs2279744','rs16897117','rs1800734','rs2228001','rs4646903',
+        // Cardiovascular wave 2
+        'rs2200733',
+        // HFE H63D
+        'rs1799945',
         // Longevity
         'rs2802292','rs3758391','rs2542052',
         // Identity expanded
