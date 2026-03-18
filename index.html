@@ -623,6 +623,92 @@
     margin-top: 8px;
   }
 
+  .card-meaning {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.5;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(99,102,241,0.04);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .card-actions {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(34,197,94,0.04);
+    border-radius: 8px;
+    border-left: 3px solid var(--green);
+  }
+
+  .card-actions-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .card-actions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .card-actions li {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.5;
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .card-actions li::before {
+    content: '\u2192';
+    position: absolute;
+    left: 0;
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  .card-science {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .card-science summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    opacity: 0.6;
+    list-style: none;
+  }
+
+  .card-science summary:hover { opacity: 1; }
+
+  .card-science summary::after {
+    content: ' \u25BC';
+    font-size: 0.55rem;
+  }
+
+  .card-science[open] summary::after {
+    content: ' \u25B2';
+  }
+
+  .card-science div {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
   .rsid {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.72rem;
@@ -2560,6 +2646,134 @@ function renderGenotype(genotype) {
   return `<div class="genotype-display"><span class="allele allele-${alleles[0]}">${alleles[0]}</span><span class="slash">/</span><span class="allele allele-${alleles[1]}">${alleles[1]}</span></div>`;
 }
 
+// ============================================================
+// AUTO-GENERATE MEANING & ACTIONS FOR CARDS
+// ============================================================
+const ACTION_MAP = {
+  // Identity: mostly informational
+  'rs12913832': { m: { 'tag-info': 'This is your predicted eye color based on 6 genes. Eye color is one of the most heritable traits.' } },
+  'rs1426654': { m: { 'tag-info': 'This variant is nearly fixed in European populations and is one of the strongest single predictors of skin tone.' } },
+  'rs17822931': { m: { 'tag-info': 'Same gene that controls earwax type also determines body odor intensity. Wet earwax = more body odor compounds.' } },
+  'rs72921001': {
+    m: { 'tag-normal': 'Cilantro tastes like an herb to you, not soap. Enjoy it freely.', 'tag-carrier': 'You might detect a soapy taste in cilantro. Some people can train this away with repeated exposure.', 'tag-risk': 'Cilantro likely tastes like soap to you. This is genetic, not a preference.' },
+    a: { 'tag-risk': ['Substitute parsley or basil in recipes that call for cilantro', 'Dried cilantro has less of the soapy aldehyde compounds than fresh'] }
+  },
+  // COMT
+  'rs4680': {
+    m: { 'tag-notable': g => g === 'GG' ? 'You clear stress hormones quickly. Great under pressure, but may lose focus in calm settings.' : g === 'AA' ? 'You hold onto dopamine longer. Sharp focus in calm settings, but more prone to anxiety under stress.' : 'You get the best of both worlds: decent stress resilience AND solid calm-state focus.' },
+    a: { 'tag-notable': g => g === 'GG' ? ['Tyrosine (500-2000mg) before demanding tasks to replenish dopamine', 'You handle caffeine and stimulants well', 'High-intensity exercise suits your neurochemistry'] : g === 'AA' ? ['Magnesium glycinate (200-400mg) for stress buffering', 'L-theanine (200mg) to smooth out stimulant edges', 'Avoid SAMe and excess methyl donors', 'Meditation and yoga are especially effective for your type', 'Limit caffeine; you are more sensitive to overstimulation'] : ['Magnesium (200-400mg) for general support', 'You adapt well to both high and low stress environments', 'Moderate caffeine intake works fine'] }
+  },
+  // BDNF
+  'rs6265': {
+    m: { 'tag-normal': 'Your brain produces BDNF (brain fertilizer) normally. Learning, memory, and neuroplasticity are well-supported genetically.', 'tag-carrier': 'Slightly reduced BDNF secretion. Your brain can compensate, especially with exercise.', 'tag-risk': 'Lowest BDNF production. Exercise is the single most effective way to boost it.' },
+    a: { 'tag-normal': ['Regular exercise maintains your already-good BDNF levels', 'Keep learning new skills to leverage your neuroplasticity'], 'tag-carrier': ['Exercise regularly (strongest BDNF booster regardless of genotype)', 'Lion\'s Mane mushroom stimulates NGF, a complementary pathway', 'Omega-3 DHA supports neuronal membranes'], 'tag-risk': ['Prioritize daily aerobic exercise (30+ min) as your #1 brain tool', 'Lion\'s Mane mushroom (500-1000mg 2x/day) for NGF support', 'Omega-3 DHA (1-2g/day) for neuronal health', 'Prioritize sleep: BDNF is consolidated during deep sleep'] }
+  },
+  // MTHFR
+  'rs1801133': {
+    m: { 'tag-risk': 'Your methylation engine runs at ~30% capacity. This affects DNA repair, neurotransmitter production, and detoxification. Highly actionable.', 'tag-carrier': 'Your methylation is mildly to moderately reduced depending on your second MTHFR variant. Supplementation helps.', 'tag-normal': 'Your methylation cycle works normally. Standard folate from diet is fine.' },
+    a: { 'tag-risk': ['Take methylfolate (5-MTHF) 800-1000mcg/day instead of folic acid', 'Add methylcobalamin (B12) 1000mcg sublingual', 'Riboflavin (B2) 25-50mg stabilizes your MTHFR enzyme', 'Get homocysteine tested (should be <10 \u00b5mol/L)', 'Avoid supplements with folic acid (check your multivitamin)'], 'tag-carrier': ['Consider methylfolate (400-800mcg/day) as your preferred folate form', 'Pair with methylcobalamin (B12) for synergy', 'Get homocysteine tested if not already done', 'Check your multivitamin; methylfolate is preferred over folic acid'], 'tag-normal': ['No special supplementation needed from this gene', 'Standard diet provides adequate folate'] }
+  },
+  // IL-6
+  'rs1800795': {
+    m: { 'tag-carrier': 'Your body produces more IL-6, a pro-inflammatory signal. This means a stronger immune response but also more chronic low-grade inflammation.', 'tag-info': 'Intermediate IL-6 production. Balanced inflammatory response.', 'tag-normal': 'Lower IL-6 production. Your inflammatory baseline is favorable.' },
+    a: { 'tag-carrier': ['Omega-3 fish oil (2g+ EPA/DHA) directly suppresses IL-6', 'Curcumin with piperine (500-1000mg/day) inhibits NF-kB', 'Vitamin D3 (2000-5000 IU/day) modulates IL-6', 'Regular moderate exercise is anti-inflammatory', 'Mediterranean diet reduces inflammatory markers', 'Get CRP tested annually to track your inflammation levels'], 'tag-normal': ['Your inflammatory profile is favorable', 'Standard anti-inflammatory diet (omega-3, vegetables, limit sugar) for maintenance'] }
+  },
+  // CYP1A2
+  'rs762551': {
+    m: { 'tag-normal': 'You clear caffeine quickly. Coffee is your friend; it may even be cardiovascularly protective for you.', 'tag-carrier': 'Caffeine stays in your system much longer than average. This affects sleep, heart health, and anxiety.' },
+    a: { 'tag-normal': ['Caffeine is safe and effective for you as a performance enhancer', 'Up to 400mg/day (4 cups coffee) is well-tolerated', 'Pre-workout caffeine works well for your genotype'], 'tag-carrier': ['No caffeine after 2pm (it lingers 6-8+ hours for you)', 'Keep to 1-2 cups coffee MAX in the morning', 'Switch to half-caf or green tea in the afternoon', 'High-dose caffeine supplements are NOT recommended', 'Consider L-theanine to smooth out caffeine jitters'] }
+  },
+  // APOE
+  'rs429358': {
+    m: { 'tag-risk': 'APOE e4 significantly increases Alzheimer\'s risk. This is one of the strongest actionable genetic findings. Early intervention matters.', 'tag-carrier': 'One copy of APOE e4 moderately elevates Alzheimer\'s risk. Lifestyle factors can significantly modify this.', 'tag-normal': 'Your APOE status is average or protective. No special Alzheimer\'s risk from this gene.' },
+    a: { 'tag-risk': ['Aerobic exercise 150+ min/week (strongest modifiable factor)', 'DHA omega-3 (1-2g/day) for brain lipid support', 'Mediterranean/MIND diet', 'Prioritize 7-8h sleep (deep sleep clears amyloid)', 'Monitor cardiovascular risk factors aggressively', 'Consider cognitive screening starting at 50'], 'tag-carrier': ['Regular aerobic exercise (strongest protective factor)', 'Omega-3 DHA (1-2g/day) for neuroprotection', 'Prioritize sleep quality (7-8h, consistent schedule)', 'Mediterranean diet', 'Manage blood pressure and blood sugar'], 'tag-normal': ['Standard brain health practices: exercise, sleep, social engagement', 'No APOE-specific urgency'] }
+  },
+  // TCF7L2
+  'rs7903146': {
+    m: { 'tag-normal': 'No elevated genetic risk for type 2 diabetes from this variant.', 'tag-carrier': 'Modestly elevated diabetes risk. Your pancreatic beta cells may not handle carb loads as efficiently. Lifestyle is your main lever.', 'tag-risk': 'Significantly elevated diabetes risk. Your insulin secretion pathway is impaired. Proactive management is important.' },
+    a: { 'tag-carrier': ['Regular exercise (30min/day minimum) reduces risk by ~30%', 'High-fiber diet: vegetables, legumes, whole grains', 'Limit refined carbs and sugary drinks', 'Berberine (500mg with meals) supports insulin sensitivity', 'Get fasting glucose and HbA1c checked annually', 'Avoid late-night eating (amplified by MTNR1B interactions)'], 'tag-risk': ['Exercise is your #1 tool (both aerobic and resistance training)', 'Berberine or alpha-lipoic acid for insulin sensitivity', 'Time-restricted eating (16:8) may benefit glucose control', 'High-fiber, low glycemic-index diet', 'Get HbA1c tested every 6 months', 'Monitor fasting glucose regularly'] }
+  },
+  // SLCO1B1
+  'rs4149056': {
+    m: { 'tag-normal': 'Standard statin metabolism. No special concerns if prescribed statins.', 'tag-carrier': 'If you ever take statins, your body clears them slower from muscles. This means higher risk of muscle pain/damage at standard doses.', 'tag-risk': 'Severely impaired statin transport. Standard statin doses are dangerous for your muscles.' },
+    a: { 'tag-carrier': ['Tell your doctor about this result before starting any statin', 'Rosuvastatin or pravastatin are less affected than simvastatin', 'CoQ10 (100mg ubiquinol/day) protects against muscle damage', 'Request lower starting dose if statins are prescribed', 'Report any muscle pain, weakness, or dark urine immediately'], 'tag-risk': ['Flag this with every prescribing physician', 'Avoid simvastatin entirely', 'CoQ10 (200mg ubiquinol/day) is strongly recommended with any statin', 'Alternative statins (rosuvastatin, pravastatin) at low doses', 'Monitor CK levels if on any statin'] }
+  },
+  // FTO
+  'rs9939609': {
+    m: { 'tag-normal': 'No genetic predisposition toward obesity. Your appetite signaling is standard.', 'tag-carrier': 'One copy of the obesity risk variant. You may notice slightly stronger hunger signals than average.', 'tag-risk': 'Both copies of the obesity risk variant. Your brain\'s hunger/satiety signals are shifted toward eating more. This is NOT about willpower; it\'s about neurological signaling.' },
+    a: { 'tag-carrier': ['Regular exercise nearly eliminates FTO\'s effect in active individuals', 'Protein-rich meals for satiety (protein suppresses ghrelin)', 'Adequate sleep (poor sleep amplifies FTO appetite effects)'], 'tag-risk': ['Exercise is especially effective at counteracting FTO', 'High-protein breakfast to manage morning hunger', 'Sleep 7-8h (sleep deprivation dramatically amplifies appetite)', 'Mindful eating practices to recognize true hunger vs. cravings', 'The good news: exercise nearly eliminates FTO\'s effect'] }
+  },
+  // Factor V Leiden
+  'rs6025': {
+    m: { 'tag-normal': 'No Factor V Leiden mutation. Normal blood clotting.', 'tag-carrier': 'Your blood has an increased tendency to form clots inappropriately. Important for travel, surgery, and medication choices.', 'tag-risk': 'Severely elevated clotting risk. This must be discussed with a hematologist.' },
+    a: { 'tag-carrier': ['Stay hydrated and move on long flights (walk every 1-2h)', 'Compression stockings for flights >4 hours', 'Tell doctors before surgery or pregnancy', 'Avoid estrogen-containing birth control (compounds risk significantly)', 'No smoking (further compounds clotting risk)'], 'tag-risk': ['Consult a hematologist', 'Absolutely avoid estrogen-based medications', 'Compression stockings for any prolonged immobility', 'Consider prophylactic anticoagulation for surgery', 'Medical alert identification recommended'] }
+  },
+  // ACTN3
+  'rs1815739': {
+    m: { 'tag-notable': g => g === 'CC' ? 'Your muscles are optimized for explosive power: sprinting, jumping, heavy lifting.' : g === 'TT' ? 'Your muscles are optimized for endurance: distance running, cycling, sustained effort.' : 'You have a versatile mix of muscle fiber types suited for both power and endurance.' },
+    a: { 'tag-notable': g => g === 'CC' ? ['Creatine (3-5g/day) is especially effective for your muscle type', 'Sprint/power training plays to your genetic strengths', 'You may excel at: weightlifting, sprinting, jumping, martial arts', 'Still train endurance for cardiovascular health'] : g === 'TT' ? ['Endurance training plays to your genetic strengths', 'You may excel at: distance running, cycling, swimming, hiking', 'Creatine still helps for high-intensity intervals and recovery', 'Still include some strength training for bone and muscle health'] : ['You have the versatile genotype: good at multiple sports', 'Creatine (3-5g/day) benefits both power and endurance work', 'Cross-training suits your fiber type mix well'] }
+  },
+  // Chronotype
+  'rs1801260': {
+    m: { 'tag-normal': 'No strong genetic push toward being a night owl. Standard sleep/wake patterns.', 'tag-info': 'Slight tendency toward evening preference. You may naturally stay up a bit later.', 'tag-notable': 'Strong night owl genetics. Your circadian clock runs later than average.' },
+    a: { 'tag-notable': ['Low-dose melatonin (0.3-1mg) 1-2h before desired bedtime', 'Bright light exposure in the morning to shift your clock earlier', 'Magnesium glycinate in the evening for sleep onset', 'Avoid screens 1h before bed (blue light delays your already-late clock)', 'If possible, align your schedule to your chronotype rather than fighting it'] }
+  },
+  // Telomere
+  'rs10936599': {
+    m: { 'tag-normal': 'Your telomere length genetics are favorable. Supports cellular longevity.', 'tag-carrier': 'One copy of the shorter-telomere variant. Lifestyle factors can protect your telomeres.', 'tag-risk': 'Both copies of the shorter-telomere variant. Telomere preservation through lifestyle is especially important.' },
+    a: { 'tag-carrier': ['Regular aerobic exercise protects telomeres', 'Stress management (meditation, mindfulness) slows telomere shortening', '7-8h quality sleep', 'Astragalus root has some evidence for telomerase activation'], 'tag-risk': ['Prioritize exercise (strongest telomere-protective lifestyle factor)', 'Stress management is critical (cortisol accelerates shortening)', 'Quality sleep (7-8h consistently)', 'Consider NMN/NR for NAD+ support (supports DNA repair pathways)', 'Astragalus (cycloastragenol) for potential telomerase activation'] }
+  },
+  // Lactose
+  'rs4988235': {
+    m: { 'tag-normal': 'You can digest dairy without issues. Your lactase enzyme stays active into adulthood.', 'tag-carrier': 'You may lose some lactase production over time. Watch for increasing dairy sensitivity with age.' },
+    a: { 'tag-carrier': ['Lactase enzyme supplement before dairy meals', 'Aged cheeses and yogurt are naturally lower in lactose', 'Lactose-free dairy products are widely available', 'Calcium and vitamin D from non-dairy sources if needed'] }
+  }
+};
+
+function autoMeaning(snpDef, result) {
+  const entry = ACTION_MAP[snpDef.id];
+  if (entry && entry.m) {
+    const val = entry.m[result.tagClass];
+    if (typeof val === 'function') return val(result.genotype || '');
+    if (val) return val;
+  }
+  // Fallback based on category
+  if (snpDef.category === 'identity') return 'This is an inherited trait determined by your DNA. It\'s informational and not something that needs action.';
+  if (result.tagClass === 'tag-risk') return 'This variant is associated with an elevated risk or altered function. See the action items below.';
+  if (result.tagClass === 'tag-carrier') return 'You carry one copy of a notable variant. The effect is moderate and often manageable.';
+  if (result.tagClass === 'tag-normal') return 'Your genotype is the common/reference variant. No specific concerns from this gene.';
+  return '';
+}
+
+function autoActions(snpDef, result) {
+  const entry = ACTION_MAP[snpDef.id];
+  if (entry && entry.a) {
+    const val = entry.a[result.tagClass];
+    if (typeof val === 'function') return val(result.genotype || '');
+    if (val) return val;
+  }
+  // Fallback based on category and risk level
+  if (snpDef.category === 'identity') return null; // traits don't need actions
+  if (result.tagClass === 'tag-normal') return ['No specific action needed from this variant'];
+  if (snpDef.category === 'pharma') return ['Share this result with your doctor or pharmacist', 'Mention it before starting any new prescription medication'];
+  if (snpDef.category === 'health' || snpDef.category === 'cardiovascular' || snpDef.category === 'cancer') {
+    if (result.tagClass === 'tag-risk') return ['Discuss with your healthcare provider', 'Consider relevant screening based on your doctor\'s advice', 'Lifestyle factors (diet, exercise, sleep) can modify genetic risk'];
+    if (result.tagClass === 'tag-carrier') return ['Be aware of this predisposition', 'Standard screening schedules are appropriate', 'Healthy lifestyle helps manage genetic risk'];
+  }
+  if (snpDef.category === 'inflammation' || snpDef.category === 'autoimmune') {
+    if (result.tagClass === 'tag-risk' || result.tagClass === 'tag-carrier') return ['Anti-inflammatory diet (omega-3, vegetables, limit sugar)', 'Regular moderate exercise', 'Adequate sleep (7-8h)', 'Manage stress levels'];
+  }
+  if (snpDef.category === 'detox') {
+    if (result.tagClass === 'tag-risk' || result.tagClass === 'tag-carrier') return ['Support detox pathways with cruciferous vegetables (broccoli, Brussels sprouts)', 'NAC or glutathione supplementation may help', 'Minimize exposure to environmental toxins where possible'];
+  }
+  if (snpDef.category === 'mental') {
+    if (result.tagClass === 'tag-risk' || result.tagClass === 'tag-carrier') return ['Regular exercise supports mental health regardless of genotype', 'Therapy and social support are especially important', 'Discuss with a mental health provider if you experience symptoms'];
+  }
+  if (snpDef.category === 'nutrition') return ['Adjust your diet or supplementation based on this result', 'See the Supplement Analyzer section for personalized recommendations'];
+  if (snpDef.category === 'longevity') return ['Exercise, sleep, and stress management are the proven longevity levers', 'Caloric restriction or time-restricted eating may activate relevant pathways'];
+  return null;
+}
+
 function renderCard(snpDef, snps) {
   const genotype = snps[snpDef.id] || null;
   if (!genotype && !snpDef.multi) return '';
@@ -2576,6 +2790,13 @@ function renderCard(snpDef, snps) {
 
   const displayGenotype = result.genotype || genotype;
 
+  // Auto-generate meaning and actions if not provided
+  if (!result.meaning) result.meaning = autoMeaning(snpDef, result);
+  if (!result.actions) result.actions = autoActions(snpDef, result);
+
+  const actionsHTML = result.actions && result.actions.length ? `<div class="card-actions"><div class="card-actions-label">What to do</div><ul>${result.actions.map(a => `<li>${a}</li>`).join('')}</ul></div>` : '';
+  const meaningHTML = result.meaning ? `<div class="card-meaning">${result.meaning}</div>` : '';
+
   return `
     <div class="card" data-color="${snpDef.color}">
       <div class="card-header">
@@ -2587,7 +2808,9 @@ function renderCard(snpDef, snps) {
       </div>
       ${renderGenotype(displayGenotype)}
       <div class="result-tag ${result.tagClass}">${result.tag}</div>
-      <div class="card-detail">${result.detail}</div>
+      ${meaningHTML}
+      ${actionsHTML}
+      <details class="card-science"><summary>Science</summary><div>${result.detail}</div></details>
     </div>
   `;
 }
