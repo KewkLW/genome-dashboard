@@ -1090,14 +1090,120 @@
 const SNP_DB = [
   // ---- IDENTITY & TRAITS ----
   {
-    id: 'rs12913832', gene: 'HERC2/OCA2', title: 'Eye Color', category: 'identity', color: 'blue',
-    interpret: g => {
-      if (g === 'GG') return { tag: 'Brown Eyes', tagClass: 'tag-info', detail: 'GG at HERC2 strongly predicts brown eyes. The G allele is dominant; two copies of A would predict blue. All blue-eyed people trace back to a single ancestor ~6,000-10,000 years ago.' };
-      if (g === 'AG' || g === 'GA') return { tag: 'Green/Hazel Likely', tagClass: 'tag-info', detail: 'AG: one copy of each. Likely green, hazel, or light brown eyes.' };
-      if (g === 'AA') return { tag: 'Blue Eyes', tagClass: 'tag-info', detail: 'AA at HERC2 strongly predicts blue eyes. This is the derived European variant.' };
-      return null;
+    id: 'rs12913832', gene: 'HERC2/OCA2 + 5 loci', title: 'Eye Color', category: 'identity', color: 'blue',
+    multi: ['rs12913832', 'rs1800407', 'rs12896399', 'rs16891982', 'rs1393350', 'rs12203592'],
+    interpret: (g, all) => {
+      // Multi-SNP eye color model (IrisPlex-inspired, 6 loci)
+      // Each SNP contributes a score: negative = lighter, positive = darker
+      // Score range roughly -12 (very blue) to +12 (very brown), middle = green/hazel
+      const herc2 = all['rs12913832'] || '';
+      const oca2 = all['rs1800407'] || '';
+      const slc24a4 = all['rs12896399'] || '';
+      const slc45a2 = all['rs16891982'] || '';
+      const tyr = all['rs1393350'] || '';
+      const irf4 = all['rs12203592'] || '';
+
+      let score = 0;
+      let snpCount = 0;
+      let details = [];
+
+      // rs12913832 (HERC2) — strongest predictor, weight 4
+      if (herc2) {
+        snpCount++;
+        if (herc2 === 'GG') { score += 4; details.push('HERC2 GG: strong brown signal'); }
+        else if (herc2 === 'AG' || herc2 === 'GA') { score += 0; details.push('HERC2 AG: intermediate, open to modifier effects'); }
+        else if (herc2 === 'AA') { score -= 4; details.push('HERC2 AA: strong blue signal'); }
+      }
+
+      // rs1800407 (OCA2 R419Q) — the hazel modifier, weight 2
+      if (oca2) {
+        snpCount++;
+        if (oca2 === 'GG') { score += 1; details.push('OCA2 R419Q GG: reference, no hazel shift'); }
+        else if (oca2 === 'AG' || oca2 === 'GA') { score -= 1; details.push('OCA2 R419Q AG: hazel modifier active, shifts brown/green toward hazel'); }
+        else if (oca2 === 'AA') { score -= 2; details.push('OCA2 R419Q AA: strong hazel/green modifier'); }
+      }
+
+      // rs12896399 (SLC24A4) — light vs dark, weight 1.5
+      if (slc24a4) {
+        snpCount++;
+        if (slc24a4 === 'GG') { score -= 1.5; details.push('SLC24A4 GG: lighter pigment signal'); }
+        else if (slc24a4 === 'GT' || slc24a4 === 'TG') { score += 0; details.push('SLC24A4 GT: neutral'); }
+        else if (slc24a4 === 'TT') { score += 1.5; details.push('SLC24A4 TT: darker pigment signal'); }
+      }
+
+      // rs16891982 (SLC45A2) — European depigmentation, weight 1.5
+      if (slc45a2) {
+        snpCount++;
+        if (slc45a2 === 'GG') { score -= 1.5; details.push('SLC45A2 GG: European light variant'); }
+        else if (slc45a2 === 'GC' || slc45a2 === 'CG') { score += 0; details.push('SLC45A2 GC: intermediate'); }
+        else if (slc45a2 === 'CC') { score += 1.5; details.push('SLC45A2 CC: ancestral darker variant'); }
+      }
+
+      // rs1393350 (TYR) — tyrosinase, weight 1
+      if (tyr) {
+        snpCount++;
+        if (tyr === 'GG') { score += 1; details.push('TYR GG: full melanin production'); }
+        else if (tyr === 'AG' || tyr === 'GA') { score -= 0.5; details.push('TYR AG: slightly reduced melanin'); }
+        else if (tyr === 'AA') { score -= 1; details.push('TYR AA: reduced melanin, lighter tendency'); }
+      }
+
+      // rs12203592 (IRF4) — freckling/light features, weight 1
+      if (irf4) {
+        snpCount++;
+        if (irf4 === 'CC') { score += 0.5; details.push('IRF4 CC: no light-shifting effect'); }
+        else if (irf4 === 'CT' || irf4 === 'TC') { score -= 0.5; details.push('IRF4 CT: mild shift toward lighter/hazel'); }
+        else if (irf4 === 'TT') { score -= 1; details.push('IRF4 TT: stronger light/hazel shift'); }
+      }
+
+      if (snpCount === 0) return null;
+
+      // Determine prediction from composite score
+      // Score range: roughly -12 to +9
+      let prediction, tagClass, confidence;
+      if (score >= 4) { prediction = 'Brown'; tagClass = 'tag-info'; }
+      else if (score >= 2) { prediction = 'Light Brown / Amber'; tagClass = 'tag-info'; }
+      else if (score >= 0) { prediction = 'Hazel'; tagClass = 'tag-info'; }
+      else if (score >= -2) { prediction = 'Green / Hazel'; tagClass = 'tag-info'; }
+      else if (score >= -4) { prediction = 'Green'; tagClass = 'tag-info'; }
+      else { prediction = 'Blue'; tagClass = 'tag-info'; }
+
+      confidence = snpCount >= 5 ? 'high' : snpCount >= 3 ? 'moderate' : 'low';
+
+      const snpSummary = [
+        herc2 ? `HERC2:${herc2}` : null, oca2 ? `OCA2:${oca2}` : null,
+        slc24a4 ? `SLC24A4:${slc24a4}` : null, slc45a2 ? `SLC45A2:${slc45a2}` : null,
+        tyr ? `TYR:${tyr}` : null, irf4 ? `IRF4:${irf4}` : null
+      ].filter(Boolean).join(', ');
+
+      return {
+        tag: `${prediction} Eyes`,
+        tagClass,
+        detail: `Multi-gene prediction using ${snpCount} loci (${confidence} confidence, composite score ${score.toFixed(1)}). ${snpSummary}. ${details.join('. ')}.`,
+        genotype: snpSummary
+      };
     },
-    summary: g => ({ emoji: '\u{1F441}', label: 'Eye Color', value: g === 'GG' ? 'Brown' : g === 'AA' ? 'Blue' : 'Green/Hazel', tip: 'Determined primarily by the HERC2 gene, which controls the OCA2 pigment gene. GG = brown (most melanin in iris), AA = blue (least melanin), AG = green/hazel. Eye color is ~75% heritable and involves 16+ genes, but this single SNP is the strongest predictor.' })
+    summary: (g, all) => {
+      // Quick scoring for summary tile
+      const herc2 = all['rs12913832'] || '';
+      const oca2 = all['rs1800407'] || '';
+      const slc24a4 = all['rs12896399'] || '';
+      const irf4 = all['rs12203592'] || '';
+      let score = 0;
+      if (herc2 === 'GG') score += 4; else if (herc2 === 'AA') score -= 4;
+      if (oca2 === 'AG' || oca2 === 'GA') score -= 1; else if (oca2 === 'AA') score -= 2;
+      if (slc24a4 === 'GG') score -= 1.5; else if (slc24a4 === 'TT') score += 1.5;
+      if (irf4 === 'CT' || irf4 === 'TC') score -= 0.5; else if (irf4 === 'TT') score -= 1;
+
+      let label;
+      if (score >= 4) label = 'Brown';
+      else if (score >= 2) label = 'Light Brown';
+      else if (score >= 0) label = 'Hazel';
+      else if (score >= -2) label = 'Green/Hazel';
+      else if (score >= -4) label = 'Green';
+      else label = 'Blue';
+
+      return { emoji: '\u{1F441}', label: 'Eye Color', value: label, tip: 'Predicted using 6 genes: HERC2/OCA2 (primary switch), OCA2 R419Q (hazel modifier), SLC24A4 (light/dark), SLC45A2 (depigmentation), TYR (melanin production), and IRF4 (light features). This multi-locus model is far more accurate for intermediate colors like hazel and green than single-SNP predictions. Based on IrisPlex research.' };
+    }
   },
   {
     id: 'rs1426654', gene: 'SLC24A5', title: 'Skin Pigmentation', category: 'identity', color: 'purple',
@@ -2921,7 +3027,7 @@ function handleFile(file) {
         const neededIds = new Set();
         SNP_DB.forEach(s => { neededIds.add(s.id); if (s.multi) s.multi.forEach(m => neededIds.add(m)); });
         // Also store some extras used in charts/summaries
-        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131','rs601338','rs1800629','rs671','rs4988235','rs762551','rs9923231','rs1815739','rs1801260','rs10936599','rs2187668','rs1800562'].forEach(id => neededIds.add(id));
+        ['rs429358','rs7412','rs4680','rs6265','rs53576','rs1800497','rs1799971','rs1611115','rs6311','rs9939609','rs7903146','rs6025','rs4149056','rs1800795','rs8176719','rs8176746','rs1801133','rs1801131','rs601338','rs1800629','rs671','rs4988235','rs762551','rs9923231','rs1815739','rs1801260','rs10936599','rs2187668','rs1800562','rs1800407','rs12896399','rs16891982','rs1393350'].forEach(id => neededIds.add(id));
         for (const id of neededIds) {
           if (data.snps[id]) cacheData.snps[id] = data.snps[id];
         }
