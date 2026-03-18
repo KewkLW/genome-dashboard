@@ -104,6 +104,87 @@
 
   .privacy-note strong { color: var(--green); }
 
+  .how-to-get-data {
+    margin-top: 24px;
+    max-width: 600px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 0.84rem;
+    color: var(--text-dim);
+  }
+
+  .how-to-get-data summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.9rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .how-to-get-data summary::before {
+    content: '\u2753';
+    font-size: 1rem;
+  }
+
+  .how-to-get-data summary::after {
+    content: '\u25BC';
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-left: auto;
+    transition: transform 0.2s;
+  }
+
+  .how-to-get-data[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  .htg-body {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .htg-body > p {
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .htg-provider {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .htg-name {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.88rem;
+    margin-bottom: 4px;
+  }
+
+  .htg-steps {
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+
+  .htg-steps strong { color: var(--text); }
+
+  .htg-link {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.82rem;
+    transition: color 0.2s;
+  }
+
+  .htg-link:hover { color: var(--accent2); }
+
   .supported {
     margin-top: 16px;
     font-size: 0.75rem;
@@ -1104,6 +1185,53 @@
   <div class="supported">
     Supported: 23andMe (.txt), AncestryDNA (.txt), MyHeritage (.csv), FamilyTreeDNA (.csv), LivingDNA (.csv), Nebula/Dante WGS (.vcf), Genes for Good (.txt)
   </div>
+
+  <details class="how-to-get-data">
+    <summary>How do I get my raw DNA data?</summary>
+    <div class="htg-body">
+      <p>Each DNA testing service lets you download your raw genetic data file. Here's how for each provider:</p>
+
+      <div class="htg-provider">
+        <div class="htg-name">23andMe</div>
+        <div class="htg-steps">Log in &rarr; click your name (top right) &rarr; <strong>Browse Raw Data</strong> &rarr; <strong>Download</strong>. You'll get a .txt file. 23andMe will email you a link to confirm the download.</div>
+        <a class="htg-link" href="https://you.23andme.com/tools/data/download/" target="_blank" rel="noopener">Go to 23andMe Data Download &rarr;</a>
+      </div>
+
+      <div class="htg-provider">
+        <div class="htg-name">AncestryDNA</div>
+        <div class="htg-steps">Log in &rarr; click <strong>DNA</strong> tab &rarr; <strong>Settings</strong> (gear icon) &rarr; scroll to <strong>Download Raw DNA Data</strong> &rarr; confirm and download the .txt file.</div>
+        <a class="htg-link" href="https://www.ancestry.com/dna/tests" target="_blank" rel="noopener">Go to Ancestry DNA Settings &rarr;</a>
+      </div>
+
+      <div class="htg-provider">
+        <div class="htg-name">MyHeritage</div>
+        <div class="htg-steps">Log in &rarr; hover <strong>DNA</strong> tab &rarr; <strong>Manage DNA kits</strong> &rarr; click the three dots on your kit &rarr; <strong>Download</strong>. You'll get a .csv file.</div>
+        <a class="htg-link" href="https://www.myheritage.com/dna/manage-kits" target="_blank" rel="noopener">Go to MyHeritage DNA Kits &rarr;</a>
+      </div>
+
+      <div class="htg-provider">
+        <div class="htg-name">FamilyTreeDNA</div>
+        <div class="htg-steps">Log in &rarr; <strong>Results &amp; Tools</strong> &rarr; <strong>Autosomal DNA</strong> &rarr; <strong>Download Raw Data</strong>. Choose the "Build 37 Raw Data Concatenated" option for the .csv file.</div>
+        <a class="htg-link" href="https://www.familytreedna.com/my/autosomal" target="_blank" rel="noopener">Go to FTDNA Results &rarr;</a>
+      </div>
+
+      <div class="htg-provider">
+        <div class="htg-name">LivingDNA</div>
+        <div class="htg-steps">Log in &rarr; <strong>DNA Results</strong> &rarr; <strong>Download</strong> section &rarr; download the raw data .csv file.</div>
+        <a class="htg-link" href="https://my.livingdna.com/" target="_blank" rel="noopener">Go to LivingDNA &rarr;</a>
+      </div>
+
+      <div class="htg-provider">
+        <div class="htg-name">Nebula Genomics / Dante Labs (WGS)</div>
+        <div class="htg-steps">Log in to your account &rarr; navigate to your results/data section &rarr; download the <strong>VCF file</strong>. This is whole-genome sequencing data and will provide the most comprehensive results.</div>
+      </div>
+
+      <div class="htg-provider" style="border:none;padding-bottom:0">
+        <div class="htg-name">Don't have a DNA test yet?</div>
+        <div class="htg-steps">23andMe and AncestryDNA are the most popular consumer tests (~$100 during sales). Both provide the raw data file needed for this dashboard. Nebula Genomics offers whole-genome sequencing (~$250) for the most complete data.</div>
+      </div>
+    </div>
+  </details>
 </div>
 
 <!-- LOADING SCREEN -->
