@@ -944,6 +944,36 @@
     flex-shrink: 0;
   }
 
+  .supp-tier-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin: -8px 0 14px;
+    line-height: 1.4;
+  }
+
+  .supp-card .supp-card-priority {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .supp-card.tier-1 .supp-card-priority { background: rgba(34,197,94,0.15); color: var(--green); }
+  .supp-card.tier-2 .supp-card-priority { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .supp-card.tier-3 .supp-card-priority { background: rgba(136,136,160,0.1); color: var(--text-dim); }
+
+  .supp-card .supp-card-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
   .supp-empty {
     text-align: center;
     padding: 20px;
@@ -1057,10 +1087,20 @@
       </div>
       <div class="supp-result" id="suppResult"></div>
 
-      <div class="supp-subsection-title"><span class="dot" style="background:var(--green)"></span> Recommended Based on Your Genetics</div>
-      <div class="supp-grid" id="suppRecommended"></div>
+      <div class="supp-subsection-title"><span class="dot" style="background:var(--green)"></span> Priority 1 — Strong Genetic Signal</div>
+      <div class="supp-tier-desc">Your genetics strongly indicate benefit. These address your most actionable variants.</div>
+      <div class="supp-grid" id="suppTier1"></div>
+
+      <div class="supp-subsection-title" style="margin-top:28px"><span class="dot" style="background:var(--blue)"></span> Priority 2 — Supportive</div>
+      <div class="supp-tier-desc">Beneficial based on your genotype, but with moderate effect sizes or secondary pathways.</div>
+      <div class="supp-grid" id="suppTier2"></div>
+
+      <div class="supp-subsection-title" style="margin-top:28px"><span class="dot" style="background:var(--text-dim)"></span> Nice to Have</div>
+      <div class="supp-tier-desc">Broadly useful with a mild genetic nudge. Lower priority unless you want full optimization.</div>
+      <div class="supp-grid" id="suppTier3"></div>
 
       <div class="supp-subsection-title" style="margin-top:28px"><span class="dot" style="background:var(--yellow)"></span> Use with Caution</div>
+      <div class="supp-tier-desc">Your genetics suggest potential issues. Read the details before using.</div>
       <div class="supp-grid" id="suppCaution"></div>
 
       <details class="info-panel" style="border:none;padding:12px 0 0;margin-top:16px;">
@@ -3685,42 +3725,49 @@ function renderSupplementSection(snps) {
   // Analyze all supplements
   const analyses = SUPPLEMENT_DB.map(s => analyzeSupplementForUser(s, snps));
 
-  // Split into recommended and caution
-  const recommended = analyses
-    .filter(a => a.verdict === 'recommended' || (a.verdict === 'beneficial' && a.priority >= 5))
-    .sort((a, b) => b.priority - a.priority);
+  // Split into tiers by priority score
+  const positive = analyses.filter(a => a.verdict === 'recommended' || a.verdict === 'beneficial');
+  const caution = analyses.filter(a => a.verdict === 'caution' || a.verdict === 'avoid').sort((a, b) => b.priority - a.priority);
 
-  const caution = analyses
-    .filter(a => a.verdict === 'caution' || a.verdict === 'avoid')
-    .sort((a, b) => b.priority - a.priority);
+  // Tier 1: recommended with priority >= 7 (strong genetic signal)
+  const tier1 = positive.filter(a => a.verdict === 'recommended' && a.priority >= 7).sort((a, b) => b.priority - a.priority);
+  // Tier 2: recommended priority 5-6, or beneficial priority >= 6
+  const tier2 = positive.filter(a => !tier1.includes(a) && ((a.verdict === 'recommended') || (a.verdict === 'beneficial' && a.priority >= 5))).sort((a, b) => b.priority - a.priority);
+  // Tier 3: everything else beneficial
+  const tier3 = positive.filter(a => !tier1.includes(a) && !tier2.includes(a) && a.priority >= 3).sort((a, b) => b.priority - a.priority);
 
-  // Render recommended grid
-  const recEl = document.getElementById('suppRecommended');
-  if (recommended.length > 0) {
-    recEl.innerHTML = recommended.map(a => {
-      const topResult = a.results.sort((x, y) => y.priority - x.priority)[0];
-      const genes = [...new Set(a.results.map(r => r.gene))];
-      const recClass = a.verdict === 'recommended' ? 'rec-high' : 'rec-moderate';
-      return `<div class="supp-card ${recClass}" onclick="showSuppDetail('${a.supplement.name.replace(/'/g, "\\'")}')">
+  function renderSuppGrid(items, tierClass, tierLabel) {
+    if (items.length === 0) return '<div class="supp-empty">None for your genotype.</div>';
+    return items.map(a => {
+      const topResult = [...a.results].sort((x, y) => y.priority - x.priority)[0];
+      const genes = [...new Set(a.results.filter(r => r.priority > 0).map(r => r.gene))];
+      const cardClass = tierClass === 'tier-1' ? 'rec-high' : tierClass === 'tier-2' ? 'rec-moderate' : '';
+      const reasonText = topResult ? topResult.text.replace(/<[^>]+>/g, '').slice(0, 140) : '';
+      return `<div class="supp-card ${cardClass} ${tierClass}" onclick="showSuppDetail('${a.supplement.name.replace(/'/g, "\\'")}')">
+        <span class="supp-card-priority">${tierLabel}</span>
         <div class="supp-card-name">${a.supplement.name}</div>
-        <div class="supp-card-reason">${topResult ? topResult.text.replace(/<[^>]+>/g, '').slice(0, 120) + '...' : ''}</div>
+        <div class="supp-card-reason">${reasonText}${reasonText.length >= 140 ? '...' : ''}</div>
         <div class="supp-card-genes">${genes.map(g => `<span class="supp-card-gene">${g}</span>`).join('')}</div>
+        <div class="supp-card-score">Score: ${a.priority}/10</div>
       </div>`;
     }).join('');
-  } else {
-    recEl.innerHTML = '<div class="supp-empty">No strongly recommended supplements based on your variants.</div>';
   }
+
+  document.getElementById('suppTier1').innerHTML = renderSuppGrid(tier1, 'tier-1', 'Priority 1');
+  document.getElementById('suppTier2').innerHTML = renderSuppGrid(tier2, 'tier-2', 'Priority 2');
+  document.getElementById('suppTier3').innerHTML = renderSuppGrid(tier3, 'tier-3', 'Nice to Have');
 
   // Render caution grid
   const cautEl = document.getElementById('suppCaution');
   if (caution.length > 0) {
     cautEl.innerHTML = caution.map(a => {
-      const topResult = a.results.sort((x, y) => y.priority - x.priority)[0];
+      const topResult = [...a.results].sort((x, y) => y.priority - x.priority)[0];
       const genes = [...new Set(a.results.map(r => r.gene))];
       const recClass = a.verdict === 'avoid' ? 'rec-avoid' : 'rec-caution';
+      const reasonText = topResult ? topResult.text.replace(/<[^>]+>/g, '').slice(0, 140) : '';
       return `<div class="supp-card ${recClass}" onclick="showSuppDetail('${a.supplement.name.replace(/'/g, "\\'")}')">
         <div class="supp-card-name">${a.supplement.name}</div>
-        <div class="supp-card-reason">${topResult ? topResult.text.replace(/<[^>]+>/g, '').slice(0, 120) + '...' : ''}</div>
+        <div class="supp-card-reason">${reasonText}${reasonText.length >= 140 ? '...' : ''}</div>
         <div class="supp-card-genes">${genes.map(g => `<span class="supp-card-gene">${g}</span>`).join('')}</div>
       </div>`;
     }).join('');
@@ -3897,16 +3944,20 @@ function exportForLLMs() {
   lines.push('Each supplement has been cross-referenced against this individual\'s genotype. Verdicts: RECOMMENDED, BENEFICIAL, NEUTRAL, CAUTION, AVOID.');
   lines.push('');
 
-  const analyses = SUPPLEMENT_DB.map(s => analyzeSupplementForUser(s, snps));
-  const recommended = analyses.filter(a => a.verdict === 'recommended' || (a.verdict === 'beneficial' && a.priority >= 5)).sort((a, b) => b.priority - a.priority);
-  const cautionList = analyses.filter(a => a.verdict === 'caution' || a.verdict === 'avoid').sort((a, b) => b.priority - a.priority);
-  const neutral = analyses.filter(a => !recommended.includes(a) && !cautionList.includes(a));
+  const expAnalyses = SUPPLEMENT_DB.map(s => analyzeSupplementForUser(s, snps));
+  const expPositive = expAnalyses.filter(a => a.verdict === 'recommended' || a.verdict === 'beneficial');
+  const cautionList = expAnalyses.filter(a => a.verdict === 'caution' || a.verdict === 'avoid').sort((a, b) => b.priority - a.priority);
 
-  if (recommended.length) {
-    lines.push('### Recommended / Beneficial');
+  const expTier1 = expPositive.filter(a => a.verdict === 'recommended' && a.priority >= 7).sort((a, b) => b.priority - a.priority);
+  const expTier2 = expPositive.filter(a => !expTier1.includes(a) && ((a.verdict === 'recommended') || (a.verdict === 'beneficial' && a.priority >= 5))).sort((a, b) => b.priority - a.priority);
+  const expTier3 = expPositive.filter(a => !expTier1.includes(a) && !expTier2.includes(a) && a.priority >= 3).sort((a, b) => b.priority - a.priority);
+
+  function exportTier(tierItems, tierName) {
+    if (!tierItems.length) return;
+    lines.push(`### ${tierName}`);
     lines.push('');
-    for (const a of recommended) {
-      lines.push(`**${a.supplement.name}** (${a.supplement.category}) — ${a.verdict.toUpperCase()}`);
+    for (const a of tierItems) {
+      lines.push(`**${a.supplement.name}** (${a.supplement.category}) — ${a.verdict.toUpperCase()} (score: ${a.priority}/10)`);
       for (const r of a.results) {
         if (r.verdict === 'neutral' && r.priority < 2) continue;
         const clean = r.text.replace(/<[^>]+>/g, '');
@@ -3915,6 +3966,10 @@ function exportForLLMs() {
       lines.push('');
     }
   }
+
+  exportTier(expTier1, 'Priority 1 — Strong Genetic Signal');
+  exportTier(expTier2, 'Priority 2 — Supportive');
+  exportTier(expTier3, 'Nice to Have');
 
   if (cautionList.length) {
     lines.push('### Use with Caution / Avoid');
