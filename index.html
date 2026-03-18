@@ -2230,6 +2230,72 @@ const SNP_DB = [
     }
   },
 
+  // ---- THYROID ----
+  {
+    id: 'rs965513', gene: 'FOXE1/9q22', title: 'FOXE1 \u2014 Thyroid Cancer Risk', category: 'health', color: 'yellow',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Lower Risk', tagClass: 'tag-normal', detail: 'GG: reference at 9q22. Lower thyroid cancer risk. FOXE1 is a thyroid-specific transcription factor essential for thyroid gland development.' };
+      if (g === 'GA' || g === 'AG') return { tag: 'One Risk Allele', tagClass: 'tag-carrier', detail: 'GA: ~1.7x increased papillary thyroid cancer risk. The strongest common genetic variant for thyroid cancer. Also associated with hypothyroidism susceptibility.' };
+      if (g === 'AA') return { tag: 'Two Risk Alleles', tagClass: 'tag-risk', detail: 'AA: ~2.7x increased thyroid cancer risk. Regular thyroid palpation and ultrasound screening may be warranted, especially with family history or radiation exposure history.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs1991517', gene: 'TSHR', title: 'TSH Receptor', category: 'health', color: 'green',
+    interpret: g => {
+      if (g === 'GG') return { tag: 'Normal TSH-R', tagClass: 'tag-normal', detail: 'GG: normal TSH receptor. Standard thyroid hormone regulation and responsiveness to TSH.' };
+      if (g === 'GT' || g === 'TG') return { tag: 'Variant', tagClass: 'tag-info', detail: 'GT: one TSHR variant. May have slightly altered TSH sensitivity. Associated with Graves disease susceptibility in some populations.' };
+      if (g === 'TT') return { tag: 'Altered TSH Response', tagClass: 'tag-carrier', detail: 'TT: altered TSH receptor. Higher Graves disease risk. TSH levels may run slightly differently. Thyroid antibody testing (anti-TPO, TRAb) recommended if symptoms appear.' };
+      return null;
+    }
+  },
+
+  // ---- SLEEP (expanded) ----
+  {
+    id: 'rs73598374', gene: 'ADA', title: 'ADA \u2014 Deep Sleep Drive', category: 'sleep', color: 'blue',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Sleep Drive', tagClass: 'tag-normal', detail: 'CC: normal adenosine deaminase activity. Standard adenosine clearance during waking hours. Normal sleep pressure buildup.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Enhanced Deep Sleep', tagClass: 'tag-notable', detail: 'CT: one copy of the Asp8Asn variant. Reduced ADA activity means adenosine accumulates more during waking. Result: stronger sleep pressure and more deep (slow-wave) sleep. You may feel sleepier during the day but get higher quality sleep.' };
+      if (g === 'TT') return { tag: 'Highest Sleep Drive', tagClass: 'tag-notable', detail: 'TT: most reduced ADA. Strongest adenosine-mediated sleep drive. More deep sleep but also more daytime sleepiness. Very sensitive to caffeine (adenosine receptor blocker).' };
+      return null;
+    }
+  },
+  {
+    id: 'rs57875989', gene: 'DEC2/BHLHE41', title: 'DEC2 \u2014 Short Sleeper', category: 'sleep', color: 'cyan',
+    interpret: g => {
+      if (g === 'CC' || g === 'GG') return { tag: 'Normal Sleep Need', tagClass: 'tag-info', detail: 'Reference: normal DEC2 (BHLHE41). Standard sleep requirement of 7-9 hours for full recovery. DEC2 regulates circadian transcription.' };
+      if (g === 'CG' || g === 'GC') return { tag: 'Possible Short Sleeper', tagClass: 'tag-notable', detail: 'Heterozygous: may carry a natural short-sleep variant. The famous P384R mutation in DEC2 allows some individuals to function fully on 4-6 hours of sleep. This is extremely rare (~1% of self-reported short sleepers actually carry it). If you consistently feel refreshed on <6 hours, this may explain it.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs4753426', gene: 'MTNR1A', title: 'Melatonin 1A Receptor', category: 'sleep', color: 'green',
+    interpret: g => {
+      if (g === 'CC') return { tag: 'Normal Melatonin Response', tagClass: 'tag-normal', detail: 'CC: normal melatonin 1A receptor. Standard melatonin signaling for circadian entrainment and sleep onset.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Altered Response', tagClass: 'tag-carrier', detail: 'CT: one variant allele. Slightly altered melatonin 1A receptor sensitivity. May have less robust circadian entrainment. Consistent sleep/wake timing and light exposure are more important for you.' };
+      if (g === 'TT') return { tag: 'Reduced Melatonin Sensitivity', tagClass: 'tag-carrier', detail: 'TT: reduced MTNR1A sensitivity. Weaker circadian entrainment from melatonin. Regular light/dark exposure (bright morning light, dim evenings) is especially important for maintaining rhythm. Melatonin supplements may need slightly higher doses to be effective.' };
+      return null;
+    }
+  },
+
+  // ---- COGNITION ----
+  {
+    id: 'rs363050', gene: 'SNAP25', title: 'SNAP25 \u2014 Synaptic Transmission', category: 'neuro', color: 'blue',
+    interpret: g => {
+      if (g === 'AA' || g === 'GG') return { tag: 'Normal', tagClass: 'tag-info', detail: 'Reference: normal SNAP25 (synaptosomal-associated protein 25). Essential for synaptic vesicle fusion and neurotransmitter release. SNAP25 variants are associated with IQ, cognitive performance, and ADHD.' };
+      if (g === 'AG' || g === 'GA') return { tag: 'Variant', tagClass: 'tag-info', detail: 'AG: one SNAP25 variant. Associated with modest differences in cognitive performance and working memory. Also linked to ADHD susceptibility in some GWAS studies.' };
+      return null;
+    }
+  },
+  {
+    id: 'rs6994992', gene: 'NRG1', title: 'Neuregulin 1', category: 'neuro', color: 'green',
+    interpret: g => {
+      if (g === 'CC' || g === 'TT') return { tag: 'Normal', tagClass: 'tag-normal', detail: 'Reference: normal neuregulin 1. NRG1 is critical for myelination, synaptic plasticity, and neural development.' };
+      if (g === 'CT' || g === 'TC') return { tag: 'Variant', tagClass: 'tag-carrier', detail: 'CT: one NRG1 variant. Associated with altered white matter integrity and modest cognitive effects. Originally identified as a schizophrenia susceptibility gene, though individual effect size is small.' };
+      return null;
+    }
+  },
+
   // ---- SKIN & HAIR (expanded identity) ----
   {
     id: 'rs1805007', gene: 'MC1R', title: 'MC1R — Red Hair / Fair Skin', category: 'identity', color: 'orange',
@@ -3987,6 +4053,12 @@ function handleFile(file) {
         'rs1799945',
         // Longevity
         'rs2802292','rs3758391','rs2542052',
+        // Thyroid
+        'rs965513','rs1991517',
+        // Sleep expanded
+        'rs73598374','rs57875989','rs4753426',
+        // Cognition
+        'rs363050','rs6994992',
         // Identity expanded
         'rs1805007','rs1805008'
         ].forEach(id => neededIds.add(id));
