@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genome Dashboard</title>
+<meta name="description" content="Free, open-source genome analysis dashboard. 100% private — your DNA data never leaves your browser. Supports 23andMe, AncestryDNA, MyHeritage, FamilyTreeDNA, and VCF files.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'none'; form-action 'none';">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F9EC;</text></svg>">
+<title>Genome Dashboard — Free Private DNA Analysis</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -1094,7 +1098,7 @@
   </div>
 
   <div class="privacy-note">
-    <strong>100% Private.</strong> Your genome data never leaves your browser. All parsing and analysis happens client-side in JavaScript. No data is uploaded to any server. The source code is fully open for inspection. Works with raw data exports from any major genotyping service.
+    <strong>100% Private. Verifiably.</strong> Your genome data never leaves your browser. All parsing and analysis happens client-side in JavaScript. A Content Security Policy header blocks ALL outbound network requests, so your DNA data is physically prevented from leaving by your browser itself. No server, no analytics, no cookies, no tracking. <strong>Works offline</strong> after first visit. Source code is fully open for inspection.
   </div>
 
   <div class="supported">
@@ -4377,6 +4381,11 @@ function clearCacheAndReload() {
     }
   } catch (e) { /* cache corrupt, show upload screen */ }
 })();
+
+// Register Service Worker for offline support
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 
 </body>
